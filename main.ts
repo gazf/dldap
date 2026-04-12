@@ -1,10 +1,10 @@
 /**
- * dldaps — Deno LDAP server with Samba support.
+ * dldaps — Deno LDAP server with Samba support + REST API.
  *
  * Usage:
  *   deno run --allow-net --allow-read --allow-write --unstable-kv main.ts [options]
  *
- * Options (environment variables):
+ * LDAP options (environment variables):
  *   LDAP_PORT          Port to listen on (default: 389)
  *   LDAP_HOST          Host to bind (default: 0.0.0.0)
  *   LDAP_BASE_DN       Base DN (default: dc=example,dc=com)
@@ -15,12 +15,20 @@
  *   SAMBA_DOMAIN       NetBIOS domain name (default: WORKGROUP)
  *   SAMBA_AUTO_HASH    Auto-generate NT hash on password change (default: true)
  *   SAMBA_LM_HASH      Enable LM hash generation (default: false)
+ *
+ * API options (environment variables):
+ *   API_PORT                 Port to listen on (default: 8080)
+ *   API_HOST                 Host to bind (default: 0.0.0.0)
+ *   CORS_ORIGIN              CORS allowed origin (default: *)
+ *   API_SESSION_TTL_SECONDS  Session TTL in seconds (default: 3600)
  */
 
 import { defaultConfig, type Config } from "./config/default.ts";
 import { KvStore } from "./src/store/kv.ts";
 import { createServer } from "./src/server.ts";
 import { ensureDomainSID } from "./src/samba/sid.ts";
+import { route, type RouterConfig } from "./src/api/router.ts";
+import { withCors } from "./src/api/middleware.ts";
 
 function loadConfig(): Config {
   const cfg = structuredClone(defaultConfig);
@@ -74,17 +82,47 @@ async function ensureBaseDN(store: KvStore, config: Config): Promise<void> {
 async function main(): Promise<void> {
   const config = loadConfig();
 
+  // API 固有の設定
+  const apiPort = parseInt(Deno.env.get("API_PORT") ?? "8080", 10);
+  const apiHost = Deno.env.get("API_HOST") ?? "0.0.0.0";
+  const corsOrigin = Deno.env.get("CORS_ORIGIN") ?? "*";
+  const sessionTTL = parseInt(Deno.env.get("API_SESSION_TTL_SECONDS") ?? "3600", 10);
+
+  // 共有 KvStore・初期化（1 回のみ）
   const store = await KvStore.open(config.kvPath);
-  config.samba.domainSID = await ensureDomainSID(store.rawKv());
+  const kv = store.rawKv();
+  config.samba.domainSID = await ensureDomainSID(kv);
   await ensureBaseDN(store, config);
 
-  const server = createServer(config, store);
+  // LDAP サーバー
+  const ldapServer = createServer(config, store);
 
-  // Graceful shutdown on SIGINT/SIGTERM
+  // API サーバー
+  const routerCfg: RouterConfig = { store, config, kv, sessionTTL, corsOrigin };
+  const apiServer = Deno.serve({ port: apiPort, hostname: apiHost }, async (req) => {
+    try {
+      const res = await route(req, routerCfg);
+      return withCors(res, corsOrigin);
+    } catch (e) {
+      console.error("Unhandled error:", e);
+      return withCors(
+        new Response(JSON.stringify({ error: "Internal server error" }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }),
+        corsOrigin,
+      );
+    }
+  });
+
+  console.log(`dldaps API listening on ${apiHost}:${apiPort}`);
+  console.log(`Base DN: ${config.baseDN}`);
+
+  // Graceful shutdown
   const shutdown = () => {
     console.log("\nShutting down...");
-    server.close();
-    store.close().then(() => Deno.exit(0));
+    ldapServer.close();
+    apiServer.shutdown().then(() => store.close()).then(() => Deno.exit(0));
   };
 
   Deno.addSignalListener("SIGINT", shutdown);
@@ -94,7 +132,8 @@ async function main(): Promise<void> {
     // SIGTERM may not be available on all platforms
   }
 
-  await server.serve();
+  // LDAP と API を同時起動
+  await Promise.all([ldapServer.serve(), apiServer.finished]);
 }
 
 main().catch((e) => {

@@ -1,0 +1,24 @@
+FROM denoland/deno:2.3.3 AS builder
+
+WORKDIR /app
+
+COPY deno.json deno.lock ./
+RUN deno install --frozen
+
+COPY . .
+RUN deno task build
+
+# ランタイムステージ（ビルド成果物のみ）
+FROM denoland/deno:2.3.3
+
+WORKDIR /app
+
+COPY --from=builder /app/deno.json /app/deno.lock ./
+COPY --from=builder /app/_fresh ./_fresh/
+COPY --from=builder /app/static ./static/
+
+EXPOSE 3000
+
+ENV PORT=3000
+
+CMD ["deno", "serve", "-A", "--port=3000", "_fresh/server.js"]
