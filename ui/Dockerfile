@@ -1,8 +1,5 @@
 FROM denoland/deno:2.3.3
 
-# Node.js は Vite ビルドに必要
-RUN apt-get update && apt-get install -y nodejs npm && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
 
 # 依存関係のキャッシュ
