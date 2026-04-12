@@ -31,7 +31,7 @@ export const defaultConfig: Config = {
   kvPath: "./db/dldaps.kv",
   samba: {
     enabled: true,
-    domainSID: "S-1-5-21-0000000000-0000000000-0000000000",
+    domainSID: "",  // 起動時に KV から読み込むか新規生成する
     domain: "WORKGROUP",
     autoHash: false,
     lmHashEnabled: false,

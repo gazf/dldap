@@ -13,7 +13,6 @@
  *   LDAP_KV_PATH       Deno KV file path (default: ./dldaps.kv)
  *   SAMBA_ENABLED      Enable Samba support (default: true)
  *   SAMBA_DOMAIN       NetBIOS domain name (default: WORKGROUP)
- *   SAMBA_DOMAIN_SID   Domain SID (auto-generated if not set)
  *   SAMBA_AUTO_HASH    Auto-generate NT hash on password change (default: true)
  *   SAMBA_LM_HASH      Enable LM hash generation (default: false)
  */
@@ -21,7 +20,7 @@
 import { defaultConfig, type Config } from "./config/default.ts";
 import { KvStore } from "./src/store/kv.ts";
 import { createServer } from "./src/server.ts";
-import { generateDomainSID } from "./src/samba/sid.ts";
+import { ensureDomainSID } from "./src/samba/sid.ts";
 
 function loadConfig(): Config {
   const cfg = structuredClone(defaultConfig);
@@ -40,16 +39,6 @@ function loadConfig(): Config {
   if (sambaEnabled !== undefined) cfg.samba.enabled = sambaEnabled !== "false";
 
   if (Deno.env.get("SAMBA_DOMAIN")) cfg.samba.domain = Deno.env.get("SAMBA_DOMAIN")!;
-
-  const domainSID = Deno.env.get("SAMBA_DOMAIN_SID");
-  if (domainSID) {
-    cfg.samba.domainSID = domainSID;
-  } else if (cfg.samba.domainSID === defaultConfig.samba.domainSID) {
-    // Auto-generate SID if using the placeholder default
-    cfg.samba.domainSID = generateDomainSID();
-    console.log(`Generated domain SID: ${cfg.samba.domainSID}`);
-    console.log("Set SAMBA_DOMAIN_SID to persist this value across restarts.");
-  }
 
   const autoHash = Deno.env.get("SAMBA_AUTO_HASH");
   if (autoHash !== undefined) cfg.samba.autoHash = autoHash === "true";
@@ -86,6 +75,7 @@ async function main(): Promise<void> {
   const config = loadConfig();
 
   const store = await KvStore.open(config.kvPath);
+  config.samba.domainSID = await ensureDomainSID(store.rawKv());
   await ensureBaseDN(store, config);
 
   const server = createServer(config, store);

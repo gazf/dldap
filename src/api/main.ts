@@ -12,14 +12,13 @@
  *   LDAP_ADMIN_PW
  *   SAMBA_ENABLED
  *   SAMBA_DOMAIN
- *   SAMBA_DOMAIN_SID
  *   SAMBA_AUTO_HASH
  *   SAMBA_LM_HASH
  */
 
 import { defaultConfig, type Config } from "../../config/default.ts";
 import { KvStore } from "../store/kv.ts";
-import { generateDomainSID } from "../samba/sid.ts";
+import { ensureDomainSID } from "../samba/sid.ts";
 import { route, type RouterConfig } from "./router.ts";
 import { withCors } from "./middleware.ts";
 
@@ -39,13 +38,6 @@ function loadConfig(): Config {
 
   if (Deno.env.get("SAMBA_DOMAIN")) cfg.samba.domain = Deno.env.get("SAMBA_DOMAIN")!;
 
-  const domainSID = Deno.env.get("SAMBA_DOMAIN_SID");
-  if (domainSID) {
-    cfg.samba.domainSID = domainSID;
-  } else if (cfg.samba.domainSID === defaultConfig.samba.domainSID) {
-    cfg.samba.domainSID = generateDomainSID();
-  }
-
   const autoHash = Deno.env.get("SAMBA_AUTO_HASH");
   if (autoHash !== undefined) cfg.samba.autoHash = autoHash === "true";
 
@@ -64,6 +56,7 @@ async function main(): Promise<void> {
 
   const store = await KvStore.open(config.kvPath);
   const kv = store.rawKv();
+  config.samba.domainSID = await ensureDomainSID(kv);
 
   const routerCfg: RouterConfig = { store, config, kv, sessionTTL, corsOrigin };
 

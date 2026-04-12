@@ -15,7 +15,6 @@ services:
       SAMBA_ENABLED: ${SAMBA_ENABLED:-true}
       SAMBA_AUTO_HASH: ${SAMBA_AUTO_HASH:-true}
       SAMBA_DOMAIN: ${SAMBA_DOMAIN:-WORKGROUP}
-      SAMBA_DOMAIN_SID: ${SAMBA_DOMAIN_SID}
       SAMBA_LM_HASH: ${SAMBA_LM_HASH:-false}
     restart: unless-stopped
 
@@ -37,7 +36,6 @@ services:
       SAMBA_ENABLED: ${SAMBA_ENABLED:-true}
       SAMBA_AUTO_HASH: ${SAMBA_AUTO_HASH:-true}
       SAMBA_DOMAIN: ${SAMBA_DOMAIN:-WORKGROUP}
-      SAMBA_DOMAIN_SID: ${SAMBA_DOMAIN_SID}
       SAMBA_LM_HASH: ${SAMBA_LM_HASH:-false}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
     depends_on:

@@ -44,6 +44,23 @@ export function generateDomainSID(): string {
   return `S-1-5-21-${buf[0]}-${buf[1]}-${buf[2]}`;
 }
 
+const DOMAIN_SID_KEY = ["config", "samba_domain_sid"] as const;
+
+/**
+ * KV から Domain SID を読み込む。存在しなければ新規生成して永続化する。
+ * 両サーバー（LDAP / API）が同じ KV ファイルを共有するため、
+ * どちらが先に起動しても同一の SID が使われることが保証される。
+ */
+export async function ensureDomainSID(kv: Deno.Kv): Promise<string> {
+  const result = await kv.get<string>(DOMAIN_SID_KEY);
+  if (result.value) return result.value;
+
+  const sid = generateDomainSID();
+  await kv.set(DOMAIN_SID_KEY, sid);
+  console.log(`Generated domain SID: ${sid}`);
+  return sid;
+}
+
 /**
  * Determine the RID for a new user/group entry.
  * Prefers uidNumber/gidNumber attributes; falls back to a sequential counter.

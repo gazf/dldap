@@ -8,6 +8,7 @@
 import { assertEquals, assertMatch } from "jsr:@std/assert";
 import {
   buildSID,
+  ensureDomainSID,
   generateDomainSID,
   userRID,
   groupRID,
@@ -89,3 +90,42 @@ Deno.test("SID: resolvePrimaryGroupSID は gidNumber がなければ Domain User
   const sid = resolvePrimaryGroupSID(DOMAIN_SID, {});
   assertEquals(sid, `${DOMAIN_SID}-${WELL_KNOWN_RIDS.DOMAIN_USERS}`);
 });
+
+// --- ensureDomainSID ---
+
+Deno.test(
+  "SID: ensureDomainSID は初回呼び出しで SID を生成して KV に保存する",
+  { permissions: { read: true, write: true } },
+  async () => {
+    const tmpPath = await Deno.makeTempFile({ suffix: ".kv" });
+    const kv = await Deno.openKv(tmpPath);
+    try {
+      const sid = await ensureDomainSID(kv);
+      assertMatch(sid, /^S-1-5-21-\d+-\d+-\d+$/);
+
+      // KV に保存されていることを確認
+      const stored = await kv.get<string>(["config", "samba_domain_sid"]);
+      assertEquals(stored.value, sid);
+    } finally {
+      kv.close();
+      await Deno.remove(tmpPath).catch(() => {});
+    }
+  },
+);
+
+Deno.test(
+  "SID: ensureDomainSID は2回目以降は同じ SID を返す",
+  { permissions: { read: true, write: true } },
+  async () => {
+    const tmpPath = await Deno.makeTempFile({ suffix: ".kv" });
+    const kv = await Deno.openKv(tmpPath);
+    try {
+      const sid1 = await ensureDomainSID(kv);
+      const sid2 = await ensureDomainSID(kv);
+      assertEquals(sid1, sid2);
+    } finally {
+      kv.close();
+      await Deno.remove(tmpPath).catch(() => {});
+    }
+  },
+);
