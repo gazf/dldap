@@ -1,0 +1,23 @@
+FROM denoland/deno:2.3.3
+
+WORKDIR /app
+
+# 依存関係をキャッシュ（ソースより先にコピーしてレイヤーを活用）
+COPY deno.json deno.lock ./
+RUN deno install --frozen --unstable-kv
+
+# ソースをコピーしてコンパイルキャッシュを作成
+COPY . .
+RUN deno cache --unstable-kv main.ts
+
+# KV データ永続化用ボリュームのマウントポイント
+VOLUME ["/data"]
+
+# LDAP ポート（デフォルト 389 は root 権限が必要なため 1389 を推奨）
+EXPOSE 1389
+
+ENV LDAP_PORT=1389 \
+    LDAP_HOST=0.0.0.0 \
+    LDAP_KV_PATH=/data/dldaps.kv
+
+CMD ["deno", "run", "--allow-net", "--allow-read", "--allow-write", "--allow-env", "--unstable-kv", "main.ts"]

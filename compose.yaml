@@ -1,0 +1,60 @@
+services:
+  dldaps:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "1389:1389"
+    volumes:
+      - ldap-data:/data
+    environment:
+      LDAP_PORT: "1389"
+      LDAP_BASE_DN: ${LDAP_BASE_DN}
+      LDAP_ADMIN_DN: ${LDAP_ADMIN_DN}
+      LDAP_ADMIN_PW: ${LDAP_ADMIN_PW}
+      SAMBA_ENABLED: ${SAMBA_ENABLED:-true}
+      SAMBA_AUTO_HASH: ${SAMBA_AUTO_HASH:-true}
+      SAMBA_DOMAIN: ${SAMBA_DOMAIN:-WORKGROUP}
+      SAMBA_DOMAIN_SID: ${SAMBA_DOMAIN_SID}
+      SAMBA_LM_HASH: ${SAMBA_LM_HASH:-false}
+    restart: unless-stopped
+
+  dldaps-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8080:8080"
+    volumes:
+      - ldap-data:/data
+    environment:
+      API_PORT: "8080"
+      API_HOST: "0.0.0.0"
+      LDAP_BASE_DN: ${LDAP_BASE_DN}
+      LDAP_ADMIN_DN: ${LDAP_ADMIN_DN}
+      LDAP_ADMIN_PW: ${LDAP_ADMIN_PW}
+      KV_PATH: "/data/dldaps.kv"
+      SAMBA_ENABLED: ${SAMBA_ENABLED:-true}
+      SAMBA_AUTO_HASH: ${SAMBA_AUTO_HASH:-true}
+      SAMBA_DOMAIN: ${SAMBA_DOMAIN:-WORKGROUP}
+      SAMBA_DOMAIN_SID: ${SAMBA_DOMAIN_SID}
+      SAMBA_LM_HASH: ${SAMBA_LM_HASH:-false}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+    depends_on:
+      - dldaps
+    restart: unless-stopped
+
+  dldaps-ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      API_BASE_URL: ${API_BASE_URL:-http://dldaps-api:8080}
+    depends_on:
+      - dldaps-api
+    restart: unless-stopped
+
+volumes:
+  ldap-data:

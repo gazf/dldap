@@ -1,0 +1,14 @@
+# Deno KV
+db/
+
+# カバレッジ
+coverage/
+
+# 環境変数ファイル
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db

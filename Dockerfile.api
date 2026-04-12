@@ -1,0 +1,19 @@
+FROM denoland/deno:2.3.3
+
+WORKDIR /app
+
+COPY deno.json deno.lock ./
+RUN deno install --frozen --unstable-kv
+
+COPY . .
+RUN deno cache --unstable-kv src/api/main.ts
+
+VOLUME ["/data"]
+
+EXPOSE 8080
+
+ENV API_PORT=8080 \
+    API_HOST=0.0.0.0 \
+    KV_PATH=/data/dldaps.kv
+
+CMD ["deno", "run", "--allow-net", "--allow-read", "--allow-write", "--allow-env", "--unstable-kv", "src/api/main.ts"]

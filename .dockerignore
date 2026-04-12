@@ -1,0 +1,6 @@
+.git
+tests
+*.kv
+*.kv-shm
+*.kv-wal
+.env
