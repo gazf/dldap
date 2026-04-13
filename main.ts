@@ -29,6 +29,7 @@ import { createServer } from "./src/server.ts";
 import { ensureDomainSID } from "./src/samba/sid.ts";
 import { route, type RouterConfig } from "./src/api/router.ts";
 import { withCors } from "./src/api/middleware.ts";
+import { onGroupAdd } from "./src/handlers/samba_hooks.ts";
 
 function loadConfig(): Config {
   const cfg = structuredClone(defaultConfig);
@@ -60,6 +61,30 @@ function loadConfig(): Config {
   if (Deno.env.get("POSIX_DEFAULT_SHELL")) cfg.posix.defaultShell = Deno.env.get("POSIX_DEFAULT_SHELL")!;
 
   return cfg;
+}
+
+async function ensureSambaGroups(store: KvStore, config: Config): Promise<void> {
+  if (!config.samba.enabled) return;
+
+  const iter = store.rawKv().list<{ dn: string; attrs: Record<string, string[]> }>({ prefix: ["entry"] });
+  let count = 0;
+  for await (const item of iter) {
+    const entry = item.value;
+    if (!entry?.attrs) continue;
+
+    const ocs = entry.attrs["objectclass"] ?? [];
+    if (!ocs.some((oc) => oc.toLowerCase() === "posixgroup")) continue;
+    if (ocs.some((oc) => oc.toLowerCase() === "sambagroupmapping")) continue;
+
+    const attrs = { ...entry.attrs };
+    onGroupAdd(attrs, config.samba);
+    await store.set({ dn: entry.dn, attrs });
+    count++;
+  }
+
+  if (count > 0) {
+    console.log(`sambaGroupMapping: added to ${count} existing group(s)`);
+  }
 }
 
 async function ensureBaseDN(store: KvStore, config: Config): Promise<void> {
@@ -99,6 +124,7 @@ async function main(): Promise<void> {
   config.samba.domainSID = await ensureDomainSID(kv);
   await ensureBaseDN(store, config);
   await store.syncPosixCounters(config.posix.uidStart, config.posix.gidStart);
+  await ensureSambaGroups(store, config);
 
   // LDAP サーバー
   const ldapServer = createServer(config, store);

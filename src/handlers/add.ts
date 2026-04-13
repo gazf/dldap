@@ -4,7 +4,7 @@ import type { AddRequest, AddResponse } from "../ldap/messages.ts";
 import { errorResult, successResult } from "../ldap/messages.ts";
 import { normalizeDN, parentDN } from "../store/types.ts";
 import type { HandlerContext } from "./context.ts";
-import { onAdd } from "./samba_hooks.ts";
+import { onAdd, onGroupAdd } from "./samba_hooks.ts";
 
 export async function handleAdd(
   req: AddRequest,
@@ -48,6 +48,7 @@ export async function handleAdd(
 
   // Samba auto-population
   onAdd(attrs, ctx.config.samba);
+  onGroupAdd(attrs, ctx.config.samba);
 
   await ctx.store.set({ dn, attrs });
 

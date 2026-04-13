@@ -21,6 +21,7 @@ import {
   notFound,
   ok,
 } from "../helpers/response.ts";
+import { onGroupAdd } from "../../handlers/samba_hooks.ts";
 
 export async function handleListGroups(
   store: DirectoryStore,
@@ -78,6 +79,9 @@ export async function handleCreateGroup(
   if (!attrs["gidnumber"]) {
     attrs["gidnumber"] = [String(await store.allocateGid(config.posix.gidStart))];
   }
+
+  // Samba group attributes
+  onGroupAdd(attrs, config.samba);
 
   await store.set({ dn: dn.toLowerCase(), attrs });
 

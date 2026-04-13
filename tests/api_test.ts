@@ -798,6 +798,36 @@ Deno.test("セッション TTL 切れのトークンは 401", async () => {
 // Auth — バリデーション
 // ---------------------------------------------------------------------------
 
+Deno.test("POST /api/groups: Samba 有効時に sambaGroupMapping が自動付与される", async () => {
+  const { baseUrl, store, cleanup } = await makeServer({ sambaEnabled: true });
+  try {
+    const token = await getToken(baseUrl);
+    const res = await fetch(`${baseUrl}/api/groups`, {
+      method: "POST",
+      headers: authHeaders(token),
+      body: JSON.stringify({ cn: "sambagrp", gidNumber: 2001 }),
+    });
+    assertEquals(res.status, 201);
+    await res.body?.cancel();
+
+    // KV から直接確認
+    const entry = await store.get("cn=sambagrp,ou=groups,dc=example,dc=com");
+    assertExists(entry);
+
+    const ocs = entry.attrs["objectclass"] ?? [];
+    assertEquals(ocs.some((oc: string) => oc.toLowerCase() === "sambagroupmapping"), true);
+
+    // gidNumber=2001 → RID=2001*2+1001=5003
+    assertExists(entry.attrs["sambasid"]);
+    assertEquals(entry.attrs["sambasid"][0].endsWith("-5003"), true);
+
+    assertEquals(entry.attrs["sambagrouptype"], ["2"]);
+    assertEquals(entry.attrs["displayname"], ["sambagrp"]);
+  } finally {
+    await cleanup();
+  }
+});
+
 Deno.test("POST /api/auth: password フィールドがない場合は 400", async () => {
   const { baseUrl, cleanup } = await makeServer();
   try {

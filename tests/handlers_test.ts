@@ -763,6 +763,44 @@ Deno.test("ModifyDN: 存在しないエントリは NoSuchObject", async () => {
   }
 });
 
+Deno.test("Add: posixGroup 追加時に sambaGroupMapping が自動付与される", async () => {
+  const { ctx, store, cleanup } = await makeCtx();
+  try {
+    const response = await handleAdd(
+      {
+        type: ProtocolOp.AddRequest,
+        entry: "cn=devs,ou=users,dc=example,dc=com",
+        attributes: [
+          { type: "objectClass", values: ["top", "posixGroup"] },
+          { type: "cn", values: ["devs"] },
+          { type: "gidNumber", values: ["1001"] },
+        ],
+      },
+      ctx,
+    );
+    assertEquals(response.result.resultCode, ResultCode.Success);
+
+    const entry = await store.get("cn=devs,ou=users,dc=example,dc=com");
+    assertExists(entry);
+
+    // sambaGroupMapping objectClass が追加されていること
+    const ocs = entry.attrs["objectclass"] ?? [];
+    assertEquals(ocs.some((oc: string) => oc.toLowerCase() === "sambagroupmapping"), true);
+
+    // sambaSID が設定されていること（gidNumber=1001 → RID=1001*2+1001=3003）
+    assertExists(entry.attrs["sambasid"]);
+    assertEquals(entry.attrs["sambasid"][0].endsWith("-3003"), true);
+
+    // sambaGroupType が "2"（Domain Group）であること
+    assertEquals(entry.attrs["sambagrouptype"], ["2"]);
+
+    // displayName が cn から設定されていること
+    assertEquals(entry.attrs["displayname"], ["devs"]);
+  } finally {
+    await cleanup();
+  }
+});
+
 Deno.test("ModifyDN: deleteOldRDN=true で旧 RDN 属性値が削除される", async () => {
   const { ctx, store, cleanup } = await makeCtx();
   try {

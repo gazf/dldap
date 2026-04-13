@@ -13,7 +13,6 @@ import {
   isSambaSamAccount,
 } from "../schema/samba.ts";
 import {
-  buildSID,
   resolveGroupSID,
   resolvePrimaryGroupSID,
   resolveUserSID,
@@ -97,6 +96,40 @@ export function onPasswordChange(
   updates["sambapwdlastset"] = [String(Math.floor(Date.now() / 1000))];
 
   return updates;
+}
+
+/**
+ * posixGroup エントリに sambaGroupMapping 属性を付与する。
+ * 既に sambaGroupMapping が付いている場合はスキップ（冪等）。
+ * Mutates attrs in place.
+ */
+export function onGroupAdd(
+  attrs: Record<string, string[]>,
+  samba: SambaConfig,
+): void {
+  if (!samba.enabled) return;
+
+  const objectClasses = attrs["objectclass"] ?? [];
+  if (!objectClasses.some((oc) => oc.toLowerCase() === "posixgroup")) return;
+  if (objectClasses.some((oc) => oc.toLowerCase() === "sambagroupmapping")) return;
+
+  // objectClass に sambaGroupMapping を追加
+  attrs["objectclass"] = [...objectClasses, "sambaGroupMapping"];
+
+  // sambaSID（GID ベースの RID: gidNumber * 2 + 1001）
+  if (!attrs["sambasid"]) {
+    attrs["sambasid"] = [resolveGroupSID(samba.domainSID, attrs)];
+  }
+
+  // sambaGroupType: 2 = Domain Group
+  if (!attrs["sambagrouptype"]) {
+    attrs["sambagrouptype"] = ["2"];
+  }
+
+  // displayName: cn から設定（オプション属性）
+  if (!attrs["displayname"] && attrs["cn"]?.[0]) {
+    attrs["displayname"] = [attrs["cn"][0]];
+  }
 }
 
 /** Extract plaintext from a userPassword value (strips {CLEARTEXT} prefix). */
