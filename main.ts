@@ -54,6 +54,11 @@ function loadConfig(): Config {
   const lmHash = Deno.env.get("SAMBA_LM_HASH");
   if (lmHash !== undefined) cfg.samba.lmHashEnabled = lmHash === "true";
 
+  if (Deno.env.get("POSIX_UID_START")) cfg.posix.uidStart = parseInt(Deno.env.get("POSIX_UID_START")!, 10);
+  if (Deno.env.get("POSIX_GID_START")) cfg.posix.gidStart = parseInt(Deno.env.get("POSIX_GID_START")!, 10);
+  if (Deno.env.get("POSIX_HOME_BASE")) cfg.posix.homeBase = Deno.env.get("POSIX_HOME_BASE")!;
+  if (Deno.env.get("POSIX_DEFAULT_SHELL")) cfg.posix.defaultShell = Deno.env.get("POSIX_DEFAULT_SHELL")!;
+
   return cfg;
 }
 

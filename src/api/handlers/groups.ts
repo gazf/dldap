@@ -74,6 +74,11 @@ export async function handleCreateGroup(
   if (body.gidNumber) attrs["gidnumber"] = [String(body.gidNumber)];
   if (body.description) attrs["description"] = [String(body.description)];
 
+  // posixGroup の必須属性を自動補完
+  if (!attrs["gidnumber"]) {
+    attrs["gidnumber"] = [String(await store.allocateGid(config.posix.gidStart))];
+  }
+
   await store.set({ dn: dn.toLowerCase(), attrs });
 
   const entry = await store.get(dn.toLowerCase());

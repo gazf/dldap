@@ -30,6 +30,12 @@ export interface DirectoryStore {
 
   /** Close/cleanup the store. */
   close(): Promise<void>;
+
+  /** Atomically allocate the next UID (>= start) and increment the counter. */
+  allocateUid(start: number): Promise<number>;
+
+  /** Atomically allocate the next GID (>= start) and increment the counter. */
+  allocateGid(start: number): Promise<number>;
 }
 
 /** Normalize a DN for consistent storage/comparison. */

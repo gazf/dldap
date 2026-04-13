@@ -97,6 +97,20 @@ export async function handleCreateUser(
   if (body.loginShell) attrs["loginshell"] = [String(body.loginShell)];
   if (body.description) attrs["description"] = [String(body.description)];
 
+  // posixAccount の必須属性を自動補完
+  if (!attrs["uidnumber"]) {
+    attrs["uidnumber"] = [String(await store.allocateUid(config.posix.uidStart))];
+  }
+  if (!attrs["gidnumber"]) {
+    attrs["gidnumber"] = [String(await store.allocateGid(config.posix.gidStart))];
+  }
+  if (!attrs["homedirectory"]) {
+    attrs["homedirectory"] = [`${config.posix.homeBase}/${uid}`];
+  }
+  if (!attrs["loginshell"]) {
+    attrs["loginshell"] = [config.posix.defaultShell];
+  }
+
   // Samba 属性を自動生成
   onAdd(attrs, config.samba);
 

@@ -132,4 +132,24 @@ export class KvStore implements DirectoryStore {
   async close(): Promise<void> {
     this.kv.close();
   }
+
+  async allocateUid(start: number): Promise<number> {
+    const key = ["config", "next_uid"];
+    while (true) {
+      const entry = await this.kv.get<number>(key);
+      const current = entry.value ?? start;
+      const result = await this.kv.atomic().check(entry).set(key, current + 1).commit();
+      if (result.ok) return current;
+    }
+  }
+
+  async allocateGid(start: number): Promise<number> {
+    const key = ["config", "next_gid"];
+    while (true) {
+      const entry = await this.kv.get<number>(key);
+      const current = entry.value ?? start;
+      const result = await this.kv.atomic().check(entry).set(key, current + 1).commit();
+      if (result.ok) return current;
+    }
+  }
 }

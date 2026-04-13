@@ -1,3 +1,14 @@
+export interface PosixConfig {
+  /** Starting UID for auto-allocation (default: 1000) */
+  uidStart: number;
+  /** Starting GID for auto-allocation (default: 1000) */
+  gidStart: number;
+  /** Base path for auto-generated homeDirectory (default: /home) */
+  homeBase: string;
+  /** Default loginShell when not specified (default: /bin/bash) */
+  defaultShell: string;
+}
+
 export interface SambaConfig {
   enabled: boolean;
   /** Domain SID e.g. S-1-5-21-XXXXXXXXXX-XXXXXXXXXX-XXXXXXXXXX */
@@ -20,6 +31,7 @@ export interface Config {
   /** Deno KV file path. Omit to use Deno default location. */
   kvPath?: string;
   samba: SambaConfig;
+  posix: PosixConfig;
 }
 
 export const defaultConfig: Config = {
@@ -35,5 +47,11 @@ export const defaultConfig: Config = {
     domain: "WORKGROUP",
     autoHash: false,
     lmHashEnabled: false,
+  },
+  posix: {
+    uidStart: 1000,
+    gidStart: 1000,
+    homeBase: "/home",
+    defaultShell: "/bin/bash",
   },
 };
