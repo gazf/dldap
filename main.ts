@@ -98,6 +98,7 @@ async function main(): Promise<void> {
   const kv = store.rawKv();
   config.samba.domainSID = await ensureDomainSID(kv);
   await ensureBaseDN(store, config);
+  await store.syncPosixCounters(config.posix.uidStart, config.posix.gidStart);
 
   // LDAP サーバー
   const ldapServer = createServer(config, store);

@@ -133,6 +133,38 @@ export class KvStore implements DirectoryStore {
     this.kv.close();
   }
 
+  /**
+   * 既存エントリの uidNumber/gidNumber を走査してカウンターを同期する。
+   * 既存の最大値+1 が現在のカウンターより大きい場合のみ更新する。
+   * サーバー起動時に呼び出すことで採番の衝突を防ぐ。
+   */
+  async syncPosixCounters(uidStart: number, gidStart: number): Promise<void> {
+    let maxUid = uidStart - 1;
+    let maxGid = gidStart - 1;
+
+    const iter = this.kv.list<DirectoryEntry>({ prefix: ["entry"] });
+    for await (const item of iter) {
+      const attrs = item.value?.attrs;
+      if (!attrs) continue;
+      const uidNum = parseInt(attrs["uidnumber"]?.[0] ?? "", 10);
+      if (!isNaN(uidNum)) maxUid = Math.max(maxUid, uidNum);
+      const gidNum = parseInt(attrs["gidnumber"]?.[0] ?? "", 10);
+      if (!isNaN(gidNum)) maxGid = Math.max(maxGid, gidNum);
+    }
+
+    const [uidEntry, gidEntry] = await Promise.all([
+      this.kv.get<number>(["config", "next_uid"]),
+      this.kv.get<number>(["config", "next_gid"]),
+    ]);
+
+    if ((uidEntry.value ?? 0) < maxUid + 1) {
+      await this.kv.set(["config", "next_uid"], maxUid + 1);
+    }
+    if ((gidEntry.value ?? 0) < maxGid + 1) {
+      await this.kv.set(["config", "next_gid"], maxGid + 1);
+    }
+  }
+
   async allocateUid(start: number): Promise<number> {
     const key = ["config", "next_uid"];
     while (true) {
