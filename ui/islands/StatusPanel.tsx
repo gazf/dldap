@@ -7,6 +7,10 @@ export default function StatusPanel() {
   const status = useSignal<StatusDTO | null>(null);
   const error = useSignal("");
   const loading = useSignal(true);
+  const sidInput = useSignal("");
+  const sidEditing = useSignal(false);
+  const sidError = useSignal("");
+  const sidSaving = useSignal(false);
 
   if (IS_BROWSER && !getToken()) {
     globalThis.location.href = "/login";
@@ -23,6 +27,34 @@ export default function StatusPanel() {
         error.value = err instanceof Error ? err.message : "Error";
         loading.value = false;
       });
+  }
+
+  function openSidEdit() {
+    sidInput.value = status.value?.sambaSID ?? "";
+    sidError.value = "";
+    sidEditing.value = true;
+  }
+
+  function cancelSidEdit() {
+    sidEditing.value = false;
+    sidError.value = "";
+  }
+
+  async function saveSid() {
+    sidSaving.value = true;
+    sidError.value = "";
+    try {
+      await apiFetch("/status/sid", {
+        method: "PUT",
+        body: JSON.stringify({ sid: sidInput.value.trim() }),
+      });
+      if (status.value) status.value = { ...status.value, sambaSID: sidInput.value.trim() };
+      sidEditing.value = false;
+    } catch (err) {
+      sidError.value = err instanceof Error ? err.message : "Error";
+    } finally {
+      sidSaving.value = false;
+    }
   }
 
   if (loading.value) return <div class="loading">Loading…</div>;
@@ -68,6 +100,39 @@ export default function StatusPanel() {
               : "disabled"}
           </span>
         </div>
+        {s.sambaEnabled && (
+          <div class="info-row">
+            <span class="info-key">Domain SID</span>
+            <span class="info-val" style="display:flex;align-items:center;gap:0.5rem">
+              {sidEditing.value
+                ? (
+                  <span style="display:flex;flex-direction:column;gap:0.25rem;flex:1">
+                    <span style="display:flex;gap:0.5rem;align-items:center">
+                      <input
+                        value={sidInput.value}
+                        onInput={(e) => sidInput.value = (e.target as HTMLInputElement).value}
+                        placeholder="S-1-5-21-X-X-X"
+                        style="font-family:monospace;flex:1"
+                      />
+                      <button class="btn btn-primary" onClick={saveSid} disabled={sidSaving.value}>
+                        {sidSaving.value ? "Saving…" : "Save"}
+                      </button>
+                      <button class="btn btn-secondary" onClick={cancelSidEdit}>Cancel</button>
+                    </span>
+                    {sidError.value && (
+                      <span style="color:var(--color-danger);font-size:0.85rem">{sidError.value}</span>
+                    )}
+                  </span>
+                )
+                : (
+                  <>
+                    <code>{s.sambaSID ?? "—"}</code>
+                    <button class="btn btn-secondary" onClick={openSidEdit}>Edit</button>
+                  </>
+                )}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

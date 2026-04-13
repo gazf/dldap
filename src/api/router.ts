@@ -6,7 +6,7 @@ import type { Config } from "../../config/default.ts";
 import type { DirectoryStore } from "../store/types.ts";
 import { requireAuth } from "./middleware.ts";
 import { handleAuthDelete, handleAuthPost } from "./handlers/auth.ts";
-import { handleStatus } from "./handlers/status.ts";
+import { handleStatus, handleUpdateSID } from "./handlers/status.ts";
 import {
   handleChangePassword,
   handleCreateUser,
@@ -76,6 +76,11 @@ export async function route(req: Request, cfg: RouterConfig): Promise<Response> 
   // GET /api/status
   if (method === "GET" && url.pathname === "/api/status") {
     return handleStatus(cfg.store, cfg.config);
+  }
+
+  // PUT /api/status/sid
+  if (method === "PUT" && url.pathname === "/api/status/sid") {
+    return handleUpdateSID(req, cfg.kv, cfg.config);
   }
 
   // --- ユーザー ---

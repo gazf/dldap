@@ -32,6 +32,7 @@ export interface StatusDTO {
   adminDN: string;
   sambaEnabled: boolean;
   sambaDomain?: string;
+  sambaSID?: string;
   counts: {
     users: number;
     groups: number;
