@@ -36,12 +36,13 @@ export function buildSID(domainSID: string, rid: number): string {
 
 /**
  * Generate a random domain SID of the form S-1-5-21-X-X-X.
- * Each sub-authority is a 32-bit unsigned integer.
+ * Each sub-authority is masked to signed 32-bit range (0–2147483647)
+ * to avoid NT_STATUS_INVALID_SID from Samba.
  */
 export function generateDomainSID(): string {
   const buf = new Uint32Array(3);
   crypto.getRandomValues(buf);
-  return `S-1-5-21-${buf[0]}-${buf[1]}-${buf[2]}`;
+  return `S-1-5-21-${buf[0] & 0x7FFFFFFF}-${buf[1] & 0x7FFFFFFF}-${buf[2] & 0x7FFFFFFF}`;
 }
 
 const DOMAIN_SID_KEY = ["config", "samba_domain_sid"] as const;
