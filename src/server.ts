@@ -25,7 +25,7 @@ export function createServer(config: Config, store: DirectoryStore): Server {
         transport: "tcp",
       });
 
-      console.log(`dldaps listening on ${config.host}:${config.port}`);
+      console.log(`dldap listening on ${config.host}:${config.port}`);
       console.log(`Base DN: ${config.baseDN}`);
       console.log(`Samba support: ${config.samba.enabled ? "enabled" : "disabled"}`);
 

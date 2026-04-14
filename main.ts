@@ -1,5 +1,5 @@
 /**
- * dldaps — Deno LDAP server with Samba support + REST API.
+ * dldap — Deno LDAP server with Samba support + REST API.
  *
  * Usage:
  *   deno run --allow-net --allow-read --allow-write --unstable-kv main.ts [options]
@@ -10,7 +10,7 @@
  *   LDAP_BASE_DN       Base DN (default: dc=example,dc=com)
  *   LDAP_ADMIN_DN      Admin DN (default: cn=admin,dc=example,dc=com)
  *   LDAP_ADMIN_PW      Admin password (required)
- *   LDAP_KV_PATH       Deno KV file path (default: ./dldaps.kv)
+ *   LDAP_KV_PATH       Deno KV file path (default: ./dldap.kv)
  *   SAMBA_ENABLED      Enable Samba support (default: true)
  *   SAMBA_DOMAIN       NetBIOS domain name (default: WORKGROUP)
  *   SAMBA_AUTO_HASH    Auto-generate NT hash on password change (default: true)
@@ -147,7 +147,7 @@ async function main(): Promise<void> {
     }
   });
 
-  console.log(`dldaps API listening on ${apiHost}:${apiPort}`);
+  console.log(`dldap API listening on ${apiHost}:${apiPort}`);
   console.log(`Base DN: ${config.baseDN}`);
 
   // Graceful shutdown

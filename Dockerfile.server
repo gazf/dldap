@@ -18,7 +18,7 @@ EXPOSE 1389 8080
 
 ENV LDAP_PORT=1389 \
     LDAP_HOST=0.0.0.0 \
-    LDAP_KV_PATH=/data/dldaps.kv \
+    LDAP_KV_PATH=/data/dldap.kv \
     API_PORT=8080 \
     API_HOST=0.0.0.0
 

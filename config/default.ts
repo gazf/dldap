@@ -40,7 +40,7 @@ export const defaultConfig: Config = {
   baseDN: "dc=example,dc=com",
   adminDN: "cn=admin,dc=example,dc=com",
   adminPassword: "",  // 必ず LDAP_ADMIN_PW 環境変数で上書きすること
-  kvPath: "./db/dldaps.kv",
+  kvPath: "./db/dldap.kv",
   samba: {
     enabled: true,
     domainSID: "",  // 起動時に KV から読み込むか新規生成する

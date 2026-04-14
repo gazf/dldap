@@ -24,7 +24,7 @@ export default function Login() {
   return (
     <div class="login-page">
       <div class="login-card">
-        <h1>dldaps admin</h1>
+        <h1>dldap admin</h1>
         {error.value && <div class="alert alert-error">{error.value}</div>}
         <form onSubmit={handleSubmit}>
           <div class="form-group">

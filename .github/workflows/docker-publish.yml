@@ -23,7 +23,7 @@ jobs:
       - uses: docker/metadata-action@v5
         id: meta
         with:
-          images: ghcr.io/${{ github.repository_owner }}/dldaps
+          images: ghcr.io/${{ github.repository_owner }}/dldap
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
@@ -54,7 +54,7 @@ jobs:
       - uses: docker/metadata-action@v5
         id: meta
         with:
-          images: ghcr.io/${{ github.repository_owner }}/dldaps-ui
+          images: ghcr.io/${{ github.repository_owner }}/dldap-ui
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}

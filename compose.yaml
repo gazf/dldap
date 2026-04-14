@@ -1,5 +1,5 @@
 services:
-  dldaps:
+  dldap:
     build:
       context: .
       dockerfile: Dockerfile.server
@@ -14,7 +14,7 @@ services:
       LDAP_BASE_DN: ${LDAP_BASE_DN}
       LDAP_ADMIN_DN: ${LDAP_ADMIN_DN}
       LDAP_ADMIN_PW: ${LDAP_ADMIN_PW}
-      LDAP_KV_PATH: /data/dldaps.kv
+      LDAP_KV_PATH: /data/dldap.kv
       SAMBA_ENABLED: ${SAMBA_ENABLED:-true}
       SAMBA_AUTO_HASH: ${SAMBA_AUTO_HASH:-true}
       SAMBA_DOMAIN: ${SAMBA_DOMAIN:-WORKGROUP}
@@ -22,16 +22,16 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
     restart: unless-stopped
 
-  dldaps-ui:
+  dldap-ui:
     build:
       context: ./ui
       dockerfile: ../Dockerfile.ui
     ports:
       - "3000:3000"
     environment:
-      API_BASE_URL: ${API_BASE_URL:-http://dldaps:8080}
+      API_BASE_URL: ${API_BASE_URL:-http://dldap:8080}
     depends_on:
-      - dldaps
+      - dldap
     restart: unless-stopped
 
 volumes:

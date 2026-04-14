@@ -1,5 +1,5 @@
 const API_BASE = "/api";
-const TOKEN_KEY = "dldaps_token";
+const TOKEN_KEY = "dldap_token";
 
 export function getToken(): string | null {
   try {

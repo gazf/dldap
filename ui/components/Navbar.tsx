@@ -16,7 +16,7 @@ export function Navbar(props: NavbarProps) {
   return (
     <div class="layout">
       <nav class="sidebar">
-        <div class="sidebar-title">dldaps</div>
+        <div class="sidebar-title">dldap</div>
         {NAV_ITEMS.map((item) => (
           <a
             key={item.href}

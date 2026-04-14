@@ -1,7 +1,7 @@
 /**
- * dldaps — Public library API.
+ * dldap — Public library API.
  *
- * Use this when embedding dldaps as a library in another Deno project.
+ * Use this when embedding dldap as a library in another Deno project.
  */
 
 // Core server
