@@ -50,10 +50,12 @@ export async function handleCreateUser(
   const uid = String(body.uid ?? "").trim();
   const cn = String(body.cn ?? "").trim();
   const password = String(body.password ?? "").trim();
+  const gidNumber = body.gidNumber !== undefined ? String(body.gidNumber).trim() : "";
 
   if (!uid) return badRequest("uid is required");
   if (!cn) return badRequest("cn is required");
   if (!password) return badRequest("password is required");
+  if (!gidNumber) return badRequest("gidNumber is required");
 
   const ou = String(body.ou ?? `ou=users,${config.baseDN}`);
   const dn = `uid=${uid},${ou}`;
@@ -87,7 +89,7 @@ export async function handleCreateUser(
   if (body.givenName) attrs["givenname"] = [String(body.givenName)];
   if (body.mail) attrs["mail"] = [String(body.mail)];
   if (body.uidNumber) attrs["uidnumber"] = [String(body.uidNumber)];
-  if (body.gidNumber) attrs["gidnumber"] = [String(body.gidNumber)];
+  attrs["gidnumber"] = [gidNumber];
   if (body.homeDirectory) attrs["homedirectory"] = [String(body.homeDirectory)];
   if (body.loginShell) attrs["loginshell"] = [String(body.loginShell)];
   if (body.description) attrs["description"] = [String(body.description)];
@@ -95,9 +97,6 @@ export async function handleCreateUser(
   // posixAccount の必須属性を自動補完
   if (!attrs["uidnumber"]) {
     attrs["uidnumber"] = [String(await store.allocateUid(config.posix.uidStart))];
-  }
-  if (!attrs["gidnumber"]) {
-    attrs["gidnumber"] = [String(await store.allocateGid(config.posix.gidStart))];
   }
   if (!attrs["homedirectory"]) {
     attrs["homedirectory"] = [`${config.posix.homeBase}/${uid}`];

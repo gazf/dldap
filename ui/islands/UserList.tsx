@@ -1,7 +1,7 @@
 import { useSignal } from "@preact/signals";
 import { IS_BROWSER } from "fresh/runtime";
 import { apiFetch, getToken } from "../utils/api.ts";
-import type { UserDTO } from "../utils/types.ts";
+import type { GroupDTO, UserDTO } from "../utils/types.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -27,6 +27,7 @@ const EMPTY_FORM = {
 // ---------------------------------------------------------------------------
 export default function UserList() {
   const users = useSignal<UserDTO[]>([]);
+  const groups = useSignal<GroupDTO[]>([]);
   const loading = useSignal(true);
   const error = useSignal("");
   const modalMode = useSignal<ModalMode>(null);
@@ -44,7 +45,10 @@ export default function UserList() {
     loading.value = true;
     error.value = "";
     try {
-      users.value = await apiFetch<UserDTO[]>("/users");
+      [users.value, groups.value] = await Promise.all([
+        apiFetch<UserDTO[]>("/users"),
+        apiFetch<GroupDTO[]>("/groups"),
+      ]);
     } catch (err) {
       error.value = err instanceof Error ? err.message : "Error";
     } finally {
@@ -104,12 +108,21 @@ export default function UserList() {
     formError.value = "";
     try {
       const f = form.value;
-      const body: Record<string, string> = { uid: f.uid, cn: f.cn, password: f.password };
+      if (!f.gidNumber) {
+        formError.value = "GID Number（グループ）は必須です";
+        formLoading.value = false;
+        return;
+      }
+      const body: Record<string, string> = {
+        uid: f.uid,
+        cn: f.cn,
+        password: f.password,
+        gidNumber: f.gidNumber,
+      };
       if (f.sn) body.sn = f.sn;
       if (f.givenName) body.givenName = f.givenName;
       if (f.mail) body.mail = f.mail;
       if (f.uidNumber) body.uidNumber = f.uidNumber;
-      if (f.gidNumber) body.gidNumber = f.gidNumber;
       if (f.homeDirectory) body.homeDirectory = f.homeDirectory;
       if (f.loginShell) body.loginShell = f.loginShell;
       if (f.description) body.description = f.description;
@@ -129,6 +142,11 @@ export default function UserList() {
     formError.value = "";
     try {
       const f = form.value;
+      if (f.gidNumber && !groups.value.some((g) => String(g.gidNumber) === f.gidNumber)) {
+        formError.value = "無効なグループが選択されています。グループを選び直してください。";
+        formLoading.value = false;
+        return;
+      }
       const body: Record<string, string> = { cn: f.cn };
       if (f.sn !== undefined) body.sn = f.sn;
       if (f.givenName !== undefined) body.givenName = f.givenName;
@@ -261,7 +279,12 @@ export default function UserList() {
             </div>
             <div class="modal-body">
               {formError.value && <div class="alert alert-error">{formError.value}</div>}
-              <UserFormFields form={form.value} setField={setField} showPassword />
+              <UserFormFields
+                form={form.value}
+                setField={setField}
+                showPassword
+                groups={groups.value}
+              />
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" onClick={closeModal}>Cancel</button>
@@ -288,7 +311,12 @@ export default function UserList() {
             </div>
             <div class="modal-body">
               {formError.value && <div class="alert alert-error">{formError.value}</div>}
-              <UserFormFields form={form.value} setField={setField} showPassword={false} />
+              <UserFormFields
+                form={form.value}
+                setField={setField}
+                showPassword={false}
+                groups={groups.value}
+              />
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" onClick={closeModal}>Cancel</button>
@@ -379,9 +407,10 @@ interface FormFieldsProps {
   form: typeof EMPTY_FORM;
   setField: (key: keyof typeof EMPTY_FORM) => (e: Event) => void;
   showPassword: boolean;
+  groups: GroupDTO[];
 }
 
-function UserFormFields({ form, setField, showPassword }: FormFieldsProps) {
+function UserFormFields({ form, setField, showPassword, groups }: FormFieldsProps) {
   return (
     <div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
@@ -410,8 +439,20 @@ function UserFormFields({ form, setField, showPassword }: FormFieldsProps) {
           <input type="number" value={form.uidNumber} onInput={setField("uidNumber")} />
         </div>
         <div class="form-group">
-          <label>GID Number</label>
-          <input type="number" value={form.gidNumber} onInput={setField("gidNumber")} />
+          <label>GID Number *</label>
+          <select value={form.gidNumber} onChange={setField("gidNumber")}>
+            <option value="">-- グループを選択 --</option>
+            {form.gidNumber && !groups.some((g) => String(g.gidNumber) === form.gidNumber) && (
+              <option value={form.gidNumber} style="color:red">
+                ⚠ {form.gidNumber}（グループ未存在）
+              </option>
+            )}
+            {groups.map((g) => (
+              <option key={g.dn} value={String(g.gidNumber)}>
+                {g.cn} ({g.gidNumber})
+              </option>
+            ))}
+          </select>
         </div>
         <div class="form-group" style="grid-column:1/-1">
           <label>Home directory</label>

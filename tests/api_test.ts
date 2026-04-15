@@ -102,6 +102,17 @@ async function statusOf(res: Response): Promise<number> {
   return res.status;
 }
 
+/** テスト用グループを作成して gidNumber を返す */
+async function createTestGroup(baseUrl: string, token: string): Promise<number> {
+  const res = await fetch(`${baseUrl}/api/groups`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ cn: "users" }),
+  });
+  const body = await res.json();
+  return body.gidNumber as number;
+}
+
 // ---------------------------------------------------------------------------
 // Auth
 // ---------------------------------------------------------------------------
@@ -268,11 +279,12 @@ Deno.test("DELETE /api/ous/:ou: 子エントリがある OU は削除できな�
   const { baseUrl, cleanup } = await makeServer();
   try {
     const token = await getToken(baseUrl);
+    const gid = await createTestGroup(baseUrl, token);
     // users OU にユーザーを追加
     const created = await fetch(`${baseUrl}/api/users`, {
       method: "POST",
       headers: authHeaders(token),
-      body: JSON.stringify({ uid: "frank", cn: "Frank", password: "pass" }),
+      body: JSON.stringify({ uid: "frank", cn: "Frank", password: "pass", gidNumber: gid }),
     });
     await created.body?.cancel();
 
@@ -294,10 +306,11 @@ Deno.test("POST /api/users: ユーザーが作成できる", async () => {
   const { baseUrl, cleanup } = await makeServer();
   try {
     const token = await getToken(baseUrl);
+    const gid = await createTestGroup(baseUrl, token);
     const res = await fetch(`${baseUrl}/api/users`, {
       method: "POST",
       headers: authHeaders(token),
-      body: JSON.stringify({ uid: "alice", cn: "Alice Smith", password: "secret" }),
+      body: JSON.stringify({ uid: "alice", cn: "Alice Smith", password: "secret", gidNumber: gid }),
     });
     assertEquals(res.status, 201);
     const body = await res.json();
@@ -323,11 +336,32 @@ Deno.test("POST /api/users: uid がない場合は 400", async () => {
   }
 });
 
+Deno.test("POST /api/users: gidNumber がない場合は 400", async () => {
+  const { baseUrl, cleanup } = await makeServer();
+  try {
+    const token = await getToken(baseUrl);
+    const res = await fetch(`${baseUrl}/api/users`, {
+      method: "POST",
+      headers: authHeaders(token),
+      body: JSON.stringify({ uid: "alice", cn: "Alice Smith", password: "secret" }),
+    });
+    assertEquals(await statusOf(res), 400);
+  } finally {
+    await cleanup();
+  }
+});
+
 Deno.test("POST /api/users: 重複 uid は 409", async () => {
   const { baseUrl, cleanup } = await makeServer();
   try {
     const token = await getToken(baseUrl);
-    const payload = JSON.stringify({ uid: "alice", cn: "Alice", password: "secret" });
+    const gid = await createTestGroup(baseUrl, token);
+    const payload = JSON.stringify({
+      uid: "alice",
+      cn: "Alice",
+      password: "secret",
+      gidNumber: gid,
+    });
 
     const first = await fetch(`${baseUrl}/api/users`, {
       method: "POST",
@@ -351,10 +385,11 @@ Deno.test("GET /api/users/:uid: ユーザーが取得できる", async () => {
   const { baseUrl, cleanup } = await makeServer();
   try {
     const token = await getToken(baseUrl);
+    const gid = await createTestGroup(baseUrl, token);
     const created = await fetch(`${baseUrl}/api/users`, {
       method: "POST",
       headers: authHeaders(token),
-      body: JSON.stringify({ uid: "bob", cn: "Bob", password: "pass" }),
+      body: JSON.stringify({ uid: "bob", cn: "Bob", password: "pass", gidNumber: gid }),
     });
     await created.body?.cancel();
 
@@ -382,10 +417,11 @@ Deno.test("PUT /api/users/:uid: ユーザー属性を更新できる", async () 
   const { baseUrl, cleanup } = await makeServer();
   try {
     const token = await getToken(baseUrl);
+    const gid = await createTestGroup(baseUrl, token);
     const created = await fetch(`${baseUrl}/api/users`, {
       method: "POST",
       headers: authHeaders(token),
-      body: JSON.stringify({ uid: "carol", cn: "Carol", password: "pass" }),
+      body: JSON.stringify({ uid: "carol", cn: "Carol", password: "pass", gidNumber: gid }),
     });
     await created.body?.cancel();
 
@@ -407,10 +443,11 @@ Deno.test("PUT /api/users/:uid/password: パスワードを変更できる", asy
   const { baseUrl, cleanup } = await makeServer();
   try {
     const token = await getToken(baseUrl);
+    const gid = await createTestGroup(baseUrl, token);
     const created = await fetch(`${baseUrl}/api/users`, {
       method: "POST",
       headers: authHeaders(token),
-      body: JSON.stringify({ uid: "dave", cn: "Dave", password: "old" }),
+      body: JSON.stringify({ uid: "dave", cn: "Dave", password: "old", gidNumber: gid }),
     });
     await created.body?.cancel();
 
@@ -429,10 +466,11 @@ Deno.test("DELETE /api/users/:uid: ユーザーを削除できる", async () => 
   const { baseUrl, cleanup } = await makeServer();
   try {
     const token = await getToken(baseUrl);
+    const gid = await createTestGroup(baseUrl, token);
     const created = await fetch(`${baseUrl}/api/users`, {
       method: "POST",
       headers: authHeaders(token),
-      body: JSON.stringify({ uid: "eve", cn: "Eve", password: "pass" }),
+      body: JSON.stringify({ uid: "eve", cn: "Eve", password: "pass", gidNumber: gid }),
     });
     await created.body?.cancel();
 
@@ -453,16 +491,17 @@ Deno.test("GET /api/users: ユーザー一覧が返る", async () => {
   const { baseUrl, cleanup } = await makeServer();
   try {
     const token = await getToken(baseUrl);
+    const gid = await createTestGroup(baseUrl, token);
     const c1 = await fetch(`${baseUrl}/api/users`, {
       method: "POST",
       headers: authHeaders(token),
-      body: JSON.stringify({ uid: "user1", cn: "User One", password: "pass" }),
+      body: JSON.stringify({ uid: "user1", cn: "User One", password: "pass", gidNumber: gid }),
     });
     await c1.body?.cancel();
     const c2 = await fetch(`${baseUrl}/api/users`, {
       method: "POST",
       headers: authHeaders(token),
-      body: JSON.stringify({ uid: "user2", cn: "User Two", password: "pass" }),
+      body: JSON.stringify({ uid: "user2", cn: "User Two", password: "pass", gidNumber: gid }),
     });
     await c2.body?.cancel();
 
@@ -597,6 +636,40 @@ Deno.test("DELETE /api/groups/:cn: グループを削除できる", async () => 
   }
 });
 
+Deno.test("DELETE /api/groups/:cn: 参照ユーザーがいる場合は 409", async () => {
+  const { baseUrl, cleanup } = await makeServer();
+  try {
+    const token = await getToken(baseUrl);
+
+    const gRes = await fetch(`${baseUrl}/api/groups`, {
+      method: "POST",
+      headers: authHeaders(token),
+      body: JSON.stringify({ cn: "staff" }),
+    });
+    const group = await gRes.json();
+
+    const uRes = await fetch(`${baseUrl}/api/users`, {
+      method: "POST",
+      headers: authHeaders(token),
+      body: JSON.stringify({
+        uid: "alice",
+        cn: "Alice",
+        password: "pass",
+        gidNumber: group.gidNumber,
+      }),
+    });
+    await uRes.body?.cancel();
+
+    const res = await fetch(`${baseUrl}/api/groups/staff`, {
+      method: "DELETE",
+      headers: authHeaders(token),
+    });
+    assertEquals(await statusOf(res), 409);
+  } finally {
+    await cleanup();
+  }
+});
+
 Deno.test("PUT /api/groups/:cn: グループ属性を更新できる", async () => {
   const { baseUrl, cleanup } = await makeServer();
   try {
@@ -726,10 +799,16 @@ Deno.test("POST /api/users: Samba 有効時に sambaSID と sambaNTPassword が�
   const { baseUrl, store, cleanup } = await makeServer({ sambaEnabled: true });
   try {
     const token = await getToken(baseUrl);
+    const gid = await createTestGroup(baseUrl, token);
     const res = await fetch(`${baseUrl}/api/users`, {
       method: "POST",
       headers: authHeaders(token),
-      body: JSON.stringify({ uid: "sambauser", cn: "Samba User", password: "testpass" }),
+      body: JSON.stringify({
+        uid: "sambauser",
+        cn: "Samba User",
+        password: "testpass",
+        gidNumber: gid,
+      }),
     });
     assertEquals(res.status, 201);
     await res.body?.cancel();
@@ -753,10 +832,11 @@ Deno.test("PUT /api/users/:uid/password: 変更後のパスワードが KV に�
   const { baseUrl, store, cleanup } = await makeServer();
   try {
     const token = await getToken(baseUrl);
+    const gid = await createTestGroup(baseUrl, token);
     const created = await fetch(`${baseUrl}/api/users`, {
       method: "POST",
       headers: authHeaders(token),
-      body: JSON.stringify({ uid: "pwtest", cn: "PW Test", password: "oldpass" }),
+      body: JSON.stringify({ uid: "pwtest", cn: "PW Test", password: "oldpass", gidNumber: gid }),
     });
     await created.body?.cancel();
 

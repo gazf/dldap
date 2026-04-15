@@ -12,7 +12,7 @@
 
 import type { Config } from "../../../config/default.ts";
 import type { DirectoryEntry, DirectoryStore } from "../../store/types.ts";
-import { entryToGroup, findGroups, isGroup } from "../helpers/entry.ts";
+import { entryToGroup, findGroups, isGroup, isUser } from "../helpers/entry.ts";
 import { badRequest, conflict, created, noContent, notFound, ok } from "../helpers/response.ts";
 import { onGroupAdd } from "../../handlers/samba_hooks.ts";
 
@@ -115,6 +115,19 @@ export async function handleDeleteGroup(
 ): Promise<Response> {
   const entry = await findGroupEntry(cn, store, config.baseDN);
   if (!entry) return notFound(`Group '${cn}' not found`);
+
+  // 参照しているユーザーが存在する場合は削除を拒否
+  const gidNumber = entry.attrs["gidnumber"]?.[0];
+  if (gidNumber) {
+    const usersOU = `ou=users,${config.baseDN}`;
+    const candidates = await store.listSubtree(usersOU);
+    const referencing = candidates.filter(
+      (e: DirectoryEntry) => isUser(e) && e.attrs["gidnumber"]?.[0] === gidNumber,
+    );
+    if (referencing.length > 0) {
+      return conflict(`Group '${cn}' is referenced by ${referencing.length} user(s)`);
+    }
+  }
 
   await store.delete(entry.dn);
   return noContent();
