@@ -14,7 +14,7 @@ import type { DirectoryEntry, DirectoryStore } from "../../store/types.ts";
 import { onAdd, onPasswordChange } from "../../handlers/samba_hooks.ts";
 import { isSambaSamAccount } from "../../schema/samba.ts";
 import { resolvePrimaryGroupSID } from "../../samba/sid.ts";
-import { entryToUser, findUsers, isGroup, isUser } from "../helpers/entry.ts";
+import { entryToUser, findUsers, isUser } from "../helpers/entry.ts";
 import { badRequest, conflict, created, noContent, notFound, ok } from "../helpers/response.ts";
 
 export async function handleListUsers(
@@ -110,22 +110,6 @@ export async function handleCreateUser(
 
   await store.set({ dn: dn.toLowerCase(), attrs });
 
-  // プライマリグループの memberUid に uid を自動追加
-  const groupsOU = `ou=groups,${config.baseDN}`;
-  const allGroups = await store.listSubtree(groupsOU);
-  const primaryGroup = allGroups.find(
-    (e: DirectoryEntry) => isGroup(e) && e.attrs["gidnumber"]?.[0] === gidNumber,
-  );
-  if (primaryGroup) {
-    const groupAttrs = { ...primaryGroup.attrs };
-    const members = [...(groupAttrs["memberuid"] ?? [])];
-    if (!members.includes(uid)) {
-      members.push(uid);
-      groupAttrs["memberuid"] = members;
-      await store.set({ dn: primaryGroup.dn, attrs: groupAttrs });
-    }
-  }
-
   const entry = await store.get(dn.toLowerCase());
   return created(entryToUser(entry!));
 }
@@ -176,18 +160,6 @@ export async function handleDeleteUser(
 ): Promise<Response> {
   const entry = await findUserEntry(uid, store, config.baseDN);
   if (!entry) return notFound(`User '${uid}' not found`);
-
-  // 全グループの memberUid から uid を自動削除
-  const userUid = entry.attrs["uid"]?.[0] ?? "";
-  const groupsOU = `ou=groups,${config.baseDN}`;
-  const allGroups = await store.listSubtree(groupsOU);
-  for (const group of allGroups) {
-    if (isGroup(group) && (group.attrs["memberuid"] ?? []).includes(userUid)) {
-      const groupAttrs = { ...group.attrs };
-      groupAttrs["memberuid"] = groupAttrs["memberuid"].filter((m: string) => m !== userUid);
-      await store.set({ dn: group.dn, attrs: groupAttrs });
-    }
-  }
 
   await store.delete(entry.dn);
   return noContent();

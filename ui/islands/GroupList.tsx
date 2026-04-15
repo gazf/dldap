@@ -3,12 +3,13 @@ import { IS_BROWSER } from "fresh/runtime";
 import { apiFetch, getToken } from "../utils/api.ts";
 import type { GroupDTO } from "../utils/types.ts";
 
-type ModalMode = "create" | "edit" | "delete" | null;
+type ModalMode = "create" | "edit" | "delete" | "member" | null;
 
 const EMPTY_FORM = {
   cn: "",
   gidNumber: "",
   description: "",
+  memberUid: "",
 };
 
 export default function GroupList() {
@@ -64,6 +65,13 @@ export default function GroupList() {
     selectedGroup.value = g;
     formError.value = "";
     modalMode.value = "delete";
+  }
+
+  function openMember(g: GroupDTO) {
+    selectedGroup.value = g;
+    form.value = { ...EMPTY_FORM };
+    formError.value = "";
+    modalMode.value = "member";
   }
 
   function closeModal() {
@@ -123,6 +131,24 @@ export default function GroupList() {
     formError.value = "";
     try {
       await apiFetch(`/groups/${selectedGroup.value.cn}`, { method: "DELETE" });
+      closeModal();
+      await load();
+    } catch (err) {
+      formError.value = err instanceof Error ? err.message : "Error";
+    } finally {
+      formLoading.value = false;
+    }
+  }
+
+  async function submitAddMember() {
+    if (!selectedGroup.value) return;
+    formLoading.value = true;
+    formError.value = "";
+    try {
+      await apiFetch(`/groups/${selectedGroup.value.cn}/members`, {
+        method: "POST",
+        body: JSON.stringify({ uid: form.value.memberUid }),
+      });
       closeModal();
       await load();
     } catch (err) {
@@ -193,6 +219,13 @@ export default function GroupList() {
                     </td>
                     <td>
                       <span style="display:flex;gap:4px">
+                        <button
+                          type="button"
+                          class="btn btn-secondary"
+                          onClick={() => openMember(g)}
+                        >
+                          + Member
+                        </button>
                         <button type="button" class="btn btn-secondary" onClick={() => openEdit(g)}>
                           Edit
                         </button>
@@ -303,6 +336,41 @@ export default function GroupList() {
                 disabled={formLoading.value}
               >
                 {formLoading.value ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add member modal */}
+      {modalMode.value === "member" && (
+        <div class="modal-overlay" onClick={closeModal}>
+          <div class="modal" onClick={(e) => e.stopPropagation()}>
+            <div class="modal-header">
+              <h3>Add Member to: {selectedGroup.value?.cn}</h3>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>✕</button>
+            </div>
+            <div class="modal-body">
+              {formError.value && <div class="alert alert-error">{formError.value}</div>}
+              <div class="form-group">
+                <label>UID *</label>
+                <input
+                  value={form.value.memberUid}
+                  onInput={setField("memberUid")}
+                  placeholder="username"
+                  required
+                />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>Cancel</button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                onClick={submitAddMember}
+                disabled={formLoading.value}
+              >
+                {formLoading.value ? "Adding…" : "Add"}
               </button>
             </div>
           </div>
