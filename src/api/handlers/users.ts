@@ -12,6 +12,8 @@
 import type { Config } from "../../../config/default.ts";
 import type { DirectoryEntry, DirectoryStore } from "../../store/types.ts";
 import { onAdd, onPasswordChange } from "../../handlers/samba_hooks.ts";
+import { isSambaSamAccount } from "../../schema/samba.ts";
+import { resolvePrimaryGroupSID } from "../../samba/sid.ts";
 import { entryToUser, findUsers, isUser } from "../helpers/entry.ts";
 import { badRequest, conflict, created, noContent, notFound, ok } from "../helpers/response.ts";
 
@@ -136,7 +138,12 @@ export async function handleUpdateUser(
   if (body.givenName !== undefined) attrs["givenname"] = [String(body.givenName)];
   if (body.mail !== undefined) attrs["mail"] = [String(body.mail)];
   if (body.uidNumber !== undefined) attrs["uidnumber"] = [String(body.uidNumber)];
-  if (body.gidNumber !== undefined) attrs["gidnumber"] = [String(body.gidNumber)];
+  if (body.gidNumber !== undefined) {
+    attrs["gidnumber"] = [String(body.gidNumber)];
+    if (config.samba.enabled && isSambaSamAccount(attrs["objectclass"] ?? [])) {
+      attrs["sambaprimarygroupsid"] = [resolvePrimaryGroupSID(config.samba.domainSID, attrs)];
+    }
+  }
   if (body.homeDirectory !== undefined) attrs["homedirectory"] = [String(body.homeDirectory)];
   if (body.loginShell !== undefined) attrs["loginshell"] = [String(body.loginShell)];
   if (body.description !== undefined) attrs["description"] = [String(body.description)];
