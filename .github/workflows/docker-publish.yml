@@ -2,11 +2,14 @@ name: Publish Docker Images
 
 on:
   push:
-    branches: [main]
     tags: ["v*"]
 
 jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+
   build-server:
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read
