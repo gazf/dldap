@@ -21,11 +21,20 @@
  *   API_HOST                 Host to bind (default: 0.0.0.0)
  *   CORS_ORIGIN              CORS allowed origin (default: *)
  *   API_SESSION_TTL_SECONDS  Session TTL in seconds (default: 3600)
+ *
+ * RADIUS options (environment variables):
+ *   RADIUS_ENABLED     Enable RADIUS server (default: false)
+ *   RADIUS_PORT        UDP port to listen on (default: 1812)
+ *   RADIUS_HOST        Host to bind (default: 0.0.0.0)
+ *   RADIUS_SECRET      Shared secret for RADIUS clients (required when RADIUS_ENABLED=true)
+ *   RADIUS_BASE_DN     Base DN to search users under (default: LDAP_BASE_DN)
+ *   RADIUS_SERVER_NAME Display name in EAP-MSCHAPv2 challenge (default: dldap)
  */
 
 import { type Config, defaultConfig } from "./config/default.ts";
 import { KvStore } from "./src/store/kv.ts";
 import { createServer } from "./src/server.ts";
+import { createRadiusServer } from "./src/radius/server.ts";
 import { ensureDomainSID } from "./src/samba/sid.ts";
 import { route, type RouterConfig } from "./src/api/router.ts";
 import { withCors } from "./src/api/middleware.ts";
@@ -64,6 +73,22 @@ function loadConfig(): Config {
   if (Deno.env.get("POSIX_HOME_BASE")) cfg.posix.homeBase = Deno.env.get("POSIX_HOME_BASE")!;
   if (Deno.env.get("POSIX_DEFAULT_SHELL")) {
     cfg.posix.defaultShell = Deno.env.get("POSIX_DEFAULT_SHELL")!;
+  }
+
+  const radiusEnabled = Deno.env.get("RADIUS_ENABLED");
+  if (radiusEnabled !== undefined) cfg.radius.enabled = radiusEnabled === "true";
+  if (Deno.env.get("RADIUS_PORT")) {
+    cfg.radius.port = parseInt(Deno.env.get("RADIUS_PORT")!, 10);
+  }
+  if (Deno.env.get("RADIUS_HOST")) cfg.radius.host = Deno.env.get("RADIUS_HOST")!;
+  const radiusSecret = Deno.env.get("RADIUS_SECRET");
+  if (radiusSecret) cfg.radius.secret = radiusSecret;
+  if (Deno.env.get("RADIUS_BASE_DN")) cfg.radius.baseDN = Deno.env.get("RADIUS_BASE_DN")!;
+  if (Deno.env.get("RADIUS_SERVER_NAME")) {
+    cfg.radius.serverName = Deno.env.get("RADIUS_SERVER_NAME")!;
+  }
+  if (cfg.radius.enabled && !cfg.radius.secret) {
+    throw new Error("RADIUS_SECRET is required when RADIUS_ENABLED=true");
   }
 
   return cfg;
@@ -126,6 +151,9 @@ async function main(): Promise<void> {
   const corsOrigin = Deno.env.get("CORS_ORIGIN") ?? "*";
   const sessionTTL = parseInt(Deno.env.get("API_SESSION_TTL_SECONDS") ?? "3600", 10);
 
+  // RADIUS baseDN のフォールバック解決
+  if (!config.radius.baseDN) config.radius.baseDN = config.baseDN;
+
   // 共有 KvStore・初期化（1 回のみ）
   const store = await KvStore.open(config.kvPath);
   const kv = store.rawKv();
@@ -136,6 +164,15 @@ async function main(): Promise<void> {
 
   // LDAP サーバー
   const ldapServer = createServer(config, store);
+
+  // RADIUS サーバー（オプション）
+  let radiusServer: ReturnType<typeof createRadiusServer> | undefined;
+  let radiusServePromise: Promise<void> = Promise.resolve();
+  if (config.radius.enabled) {
+    radiusServer = createRadiusServer(config, store);
+    console.log(`RADIUS listening on ${config.radius.host}:${config.radius.port}/udp`);
+    radiusServePromise = radiusServer.serve();
+  }
 
   // API サーバー
   const routerCfg: RouterConfig = { store, config, kv, sessionTTL, corsOrigin };
@@ -162,6 +199,7 @@ async function main(): Promise<void> {
   const shutdown = () => {
     console.log("\nShutting down...");
     ldapServer.close();
+    radiusServer?.close();
     apiServer.shutdown().then(() => store.close()).then(() => Deno.exit(0));
   };
 
@@ -172,8 +210,8 @@ async function main(): Promise<void> {
     // SIGTERM may not be available on all platforms
   }
 
-  // LDAP と API を同時起動
-  await Promise.all([ldapServer.serve(), apiServer.finished]);
+  // LDAP, RADIUS, API を同時起動
+  await Promise.all([ldapServer.serve(), apiServer.finished, radiusServePromise]);
 }
 
 main().catch((e) => {

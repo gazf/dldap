@@ -1019,7 +1019,7 @@ function desRotL28(halfKey: number, n: number): number {
 }
 
 /** DES ECB encrypt one 8-byte block with an 8-byte key. */
-function desEncrypt(block: Uint8Array, key8: Uint8Array): Uint8Array {
+export function desEncrypt(block: Uint8Array, key8: Uint8Array): Uint8Array {
   // Key schedule
   const kp = desPerm(key8, DES_PC1, 56);
   // Extract C (bits 1-28) and D (bits 29-56) as integers
