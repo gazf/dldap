@@ -351,6 +351,51 @@ Deno.test("POST /api/users: gidNumber がない場合は 400", async () => {
   }
 });
 
+Deno.test("POST /api/users: 作成時にプライマリグループの memberUid に自動追加される", async () => {
+  const { baseUrl, cleanup } = await makeServer();
+  try {
+    const token = await getToken(baseUrl);
+    const gid = await createTestGroup(baseUrl, token);
+
+    await fetch(`${baseUrl}/api/users`, {
+      method: "POST",
+      headers: authHeaders(token),
+      body: JSON.stringify({ uid: "alice", cn: "Alice", password: "pass", gidNumber: gid }),
+    }).then((r) => r.body?.cancel());
+
+    const groupRes = await fetch(`${baseUrl}/api/groups/users`, { headers: authHeaders(token) });
+    const group = await groupRes.json();
+    assertEquals(group.members.includes("alice"), true);
+  } finally {
+    await cleanup();
+  }
+});
+
+Deno.test("DELETE /api/users/:uid: 削除時に全グループの memberUid から自動削除される", async () => {
+  const { baseUrl, cleanup } = await makeServer();
+  try {
+    const token = await getToken(baseUrl);
+    const gid = await createTestGroup(baseUrl, token);
+
+    await fetch(`${baseUrl}/api/users`, {
+      method: "POST",
+      headers: authHeaders(token),
+      body: JSON.stringify({ uid: "alice", cn: "Alice", password: "pass", gidNumber: gid }),
+    }).then((r) => r.body?.cancel());
+
+    await fetch(`${baseUrl}/api/users/alice`, {
+      method: "DELETE",
+      headers: authHeaders(token),
+    }).then((r) => r.body?.cancel());
+
+    const groupRes = await fetch(`${baseUrl}/api/groups/users`, { headers: authHeaders(token) });
+    const group = await groupRes.json();
+    assertEquals(group.members.includes("alice"), false);
+  } finally {
+    await cleanup();
+  }
+});
+
 Deno.test("POST /api/users: 重複 uid は 409", async () => {
   const { baseUrl, cleanup } = await makeServer();
   try {

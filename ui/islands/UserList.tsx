@@ -142,7 +142,12 @@ export default function UserList() {
     formError.value = "";
     try {
       const f = form.value;
-      if (f.gidNumber && !groups.value.some((g) => String(g.gidNumber) === f.gidNumber)) {
+      if (!f.gidNumber) {
+        formError.value = "GID Number（グループ）は必須です";
+        formLoading.value = false;
+        return;
+      }
+      if (!groups.value.some((g) => String(g.gidNumber) === f.gidNumber)) {
         formError.value = "無効なグループが選択されています。グループを選び直してください。";
         formLoading.value = false;
         return;
@@ -205,6 +210,21 @@ export default function UserList() {
     return (e: Event) => {
       form.value = { ...form.value, [key]: (e.target as HTMLInputElement).value };
     };
+  }
+
+  async function addSecondaryGroup(groupCn: string) {
+    await apiFetch(`/groups/${groupCn}/members`, {
+      method: "POST",
+      body: JSON.stringify({ uid: selectedUser.value!.uid }),
+    });
+    groups.value = await apiFetch<GroupDTO[]>("/groups");
+  }
+
+  async function removeSecondaryGroup(groupCn: string) {
+    await apiFetch(`/groups/${groupCn}/members/${selectedUser.value!.uid}`, {
+      method: "DELETE",
+    });
+    groups.value = await apiFetch<GroupDTO[]>("/groups");
   }
 
   return (
@@ -316,6 +336,18 @@ export default function UserList() {
                 setField={setField}
                 showPassword={false}
                 groups={groups.value}
+                secondaryGroups={groups.value.filter(
+                  (g) =>
+                    g.members.includes(selectedUser.value?.uid ?? "") &&
+                    String(g.gidNumber) !== form.value.gidNumber,
+                )}
+                availableGroups={groups.value.filter(
+                  (g) =>
+                    !g.members.includes(selectedUser.value?.uid ?? "") &&
+                    String(g.gidNumber) !== form.value.gidNumber,
+                )}
+                onAddSecondary={addSecondaryGroup}
+                onRemoveSecondary={removeSecondaryGroup}
               />
             </div>
             <div class="modal-footer">
@@ -408,9 +440,24 @@ interface FormFieldsProps {
   setField: (key: keyof typeof EMPTY_FORM) => (e: Event) => void;
   showPassword: boolean;
   groups: GroupDTO[];
+  secondaryGroups?: GroupDTO[];
+  availableGroups?: GroupDTO[];
+  onAddSecondary?: (cn: string) => void;
+  onRemoveSecondary?: (cn: string) => void;
 }
 
-function UserFormFields({ form, setField, showPassword, groups }: FormFieldsProps) {
+function UserFormFields(
+  {
+    form,
+    setField,
+    showPassword,
+    groups,
+    secondaryGroups,
+    availableGroups,
+    onAddSecondary,
+    onRemoveSecondary,
+  }: FormFieldsProps,
+) {
   return (
     <div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
@@ -454,6 +501,38 @@ function UserFormFields({ form, setField, showPassword, groups }: FormFieldsProp
             ))}
           </select>
         </div>
+        {secondaryGroups !== undefined && (
+          <div class="form-group" style="grid-column:1/-1">
+            <label>所属グループ（セカンダリ）</label>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+              {secondaryGroups.map((g) => (
+                <span key={g.dn} class="tag">
+                  {g.cn}
+                  <button
+                    type="button"
+                    onClick={() => onRemoveSecondary?.(g.cn)}
+                    style="background:none;border:none;cursor:pointer;margin-left:2px;color:#888"
+                  >
+                    ✕
+                  </button>
+                </span>
+              ))}
+              {availableGroups && availableGroups.length > 0 && (
+                <select
+                  value=""
+                  onChange={(e) => {
+                    const cn = (e.target as HTMLSelectElement).value;
+                    if (cn) onAddSecondary?.(cn);
+                    (e.target as HTMLSelectElement).value = "";
+                  }}
+                >
+                  <option value="">＋ 追加</option>
+                  {availableGroups.map((g) => <option key={g.dn} value={g.cn}>{g.cn}</option>)}
+                </select>
+              )}
+            </div>
+          </div>
+        )}
         <div class="form-group" style="grid-column:1/-1">
           <label>Home directory</label>
           <input
