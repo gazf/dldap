@@ -41,6 +41,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   build-ui:
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read
