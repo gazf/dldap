@@ -24,10 +24,13 @@ export async function createToken(
     .join("");
 
   const now = Date.now();
-  await kv.set([SESSION_PREFIX, token], {
-    createdAt: now,
-    expiresAt: now + ttlSeconds * 1000,
-  } satisfies SessionValue);
+  await kv.set(
+    [SESSION_PREFIX, token],
+    {
+      createdAt: now,
+      expiresAt: now + ttlSeconds * 1000,
+    } satisfies SessionValue,
+  );
 
   return token;
 }

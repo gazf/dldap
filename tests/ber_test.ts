@@ -6,27 +6,24 @@
  * 仕様通りにエンコード/デコードされることを確認する。
  */
 
-import { assertEquals, assertThrows } from "jsr:@std/assert";
+import { assertEquals, assertThrows } from "@std/assert";
 import {
-  decodeBer,
   decodeAll,
+  decodeBer,
+  decodeBoolean,
   decodeChildren,
   decodeInteger,
   decodeOctetStringAsString,
-  decodeBoolean,
-  decodeEnumerated,
 } from "../src/ber/decoder.ts";
 import {
+  concat,
+  encodeBoolean,
+  encodeConstructed,
   encodeInteger,
   encodeOctetString,
-  encodeBoolean,
-  encodeEnumerated,
-  encodeConstructed,
-  concat,
+  TAG_BOOLEAN,
   TAG_INTEGER,
   TAG_OCTET_STRING,
-  TAG_BOOLEAN,
-  TAG_ENUMERATED,
   TAG_SEQUENCE,
 } from "../src/ber/encoder.ts";
 

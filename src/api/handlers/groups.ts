@@ -13,14 +13,7 @@
 import type { Config } from "../../../config/default.ts";
 import type { DirectoryEntry, DirectoryStore } from "../../store/types.ts";
 import { entryToGroup, findGroups, isGroup } from "../helpers/entry.ts";
-import {
-  badRequest,
-  conflict,
-  created,
-  noContent,
-  notFound,
-  ok,
-} from "../helpers/response.ts";
+import { badRequest, conflict, created, noContent, notFound, ok } from "../helpers/response.ts";
 import { onGroupAdd } from "../../handlers/samba_hooks.ts";
 
 export async function handleListGroups(

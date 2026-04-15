@@ -17,14 +17,9 @@ export { defaultConfig } from "./config/default.ts";
 export type { Config, SambaConfig } from "./config/default.ts";
 
 // Samba utilities
-export { ntHash, lmHash, md4 } from "./src/samba/hash.ts";
-export {
-  buildSID,
-  generateDomainSID,
-  userRID,
-  groupRID,
-} from "./src/samba/sid.ts";
+export { lmHash, md4, ntHash } from "./src/samba/hash.ts";
+export { buildSID, generateDomainSID, groupRID, userRID } from "./src/samba/sid.ts";
 
 // LDAP messages and types
-export type { LdapMessage, Filter } from "./src/ldap/messages.ts";
+export type { Filter, LdapMessage } from "./src/ldap/messages.ts";
 export { ResultCode, SearchScope } from "./src/ldap/constants.ts";

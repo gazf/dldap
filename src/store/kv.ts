@@ -129,8 +129,9 @@ export class KvStore implements DirectoryStore {
     }
   }
 
-  async close(): Promise<void> {
+  close(): Promise<void> {
     this.kv.close();
+    return Promise.resolve();
   }
 
   /**

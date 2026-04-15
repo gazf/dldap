@@ -6,8 +6,8 @@
  * これが壊れると Samba との相互運用性が失われる。
  */
 
-import { assertEquals } from "jsr:@std/assert";
-import { ntHash, lmHash, md4 } from "../src/samba/hash.ts";
+import { assertEquals } from "@std/assert";
+import { lmHash, md4, ntHash } from "../src/samba/hash.ts";
 
 // --- MD4 (RFC 1320 Section 5 のテストベクター) ---
 

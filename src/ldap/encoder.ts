@@ -3,30 +3,23 @@
  */
 
 import {
-  TAG_BOOLEAN,
+  concat,
+  encodeConstructed,
+  encodeEnumerated,
+  encodeInteger,
+  encodeOctetString,
   TAG_ENUMERATED,
   TAG_INTEGER,
   TAG_OCTET_STRING,
   TAG_SEQUENCE,
   TAG_SET,
-  concat,
-  encodeBoolean,
-  encodeConstructed,
-  encodeEnumerated,
-  encodeInteger,
-  encodeNull,
-  encodeOctetString,
 } from "../ber/encoder.ts";
-import { ProtocolOp, appTag, ctxTag } from "./constants.ts";
+import { appTag, ctxTag, ProtocolOp } from "./constants.ts";
 import type {
-  AddResponse,
   BindResponse,
-  DelResponse,
   ExtendedResponse,
   LdapMessage,
   LdapResult,
-  ModifyDNResponse,
-  ModifyResponse,
   PartialAttribute,
   SearchResultDone,
   SearchResultEntry,
@@ -81,7 +74,10 @@ function encodeSearchResultEntry(op: SearchResultEntry): Uint8Array {
 
 function encodeAttribute(attr: PartialAttribute): Uint8Array {
   const type = encodeOctetString(TAG_OCTET_STRING, attr.type);
-  const vals = encodeConstructed(TAG_SET, ...attr.values.map((v) => encodeOctetString(TAG_OCTET_STRING, v)));
+  const vals = encodeConstructed(
+    TAG_SET,
+    ...attr.values.map((v) => encodeOctetString(TAG_OCTET_STRING, v)),
+  );
   return encodeConstructed(TAG_SEQUENCE, type, vals);
 }
 

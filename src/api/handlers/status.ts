@@ -39,6 +39,7 @@ export async function handleUpdateSID(
   req: Request,
   kv: Deno.Kv,
   config: Config,
+  store: DirectoryStore,
 ): Promise<Response> {
   let body: { sid?: string };
   try {
@@ -59,7 +60,31 @@ export async function handleUpdateSID(
   await kv.set(DOMAIN_SID_KEY, sid);
   config.samba.domainSID = sid;
 
+  // 既存ユーザー・グループの sambaSID / sambaPrimaryGroupSID を一括更新
+  const base = await store.get(config.baseDN.toLowerCase());
+  const all = [
+    ...(base ? [base] : []),
+    ...await store.listSubtree(config.baseDN.toLowerCase()),
+  ];
+  for (const entry of all) {
+    const attrs = { ...entry.attrs };
+    let changed = false;
+
+    for (const key of ["sambasid", "sambaprimarygroupsid"]) {
+      if (attrs[key]?.[0]?.startsWith("S-1-5-21-")) {
+        attrs[key] = [replaceDomainSID(attrs[key][0], sid)];
+        changed = true;
+      }
+    }
+    if (changed) await store.set({ dn: entry.dn, attrs });
+  }
+
   return ok({ sambaSID: sid });
+}
+
+function replaceDomainSID(oldSID: string, newDomainSID: string): string {
+  const lastDash = oldSID.lastIndexOf("-");
+  return newDomainSID + oldSID.slice(lastDash);
 }
 
 function isValidDomainSID(sid: string): boolean {

@@ -172,8 +172,8 @@ export default function GroupList() {
       {error.value && <div class="alert alert-error">{error.value}</div>}
 
       <div class="toolbar">
-        <button class="btn btn-primary" onClick={openCreate}>+ Add Group</button>
-        <button class="btn btn-secondary" onClick={load} disabled={loading.value}>
+        <button type="button" class="btn btn-primary" onClick={openCreate}>+ Add Group</button>
+        <button type="button" class="btn btn-secondary" onClick={load} disabled={loading.value}>
           Refresh
         </button>
       </div>
@@ -196,7 +196,9 @@ export default function GroupList() {
               <tbody>
                 {groups.value.map((g) => (
                   <tr key={g.cn}>
-                    <td><code>{g.cn}</code></td>
+                    <td>
+                      <code>{g.cn}</code>
+                    </td>
                     <td>{g.gidNumber ?? "—"}</td>
                     <td>
                       {g.members.length === 0
@@ -205,6 +207,7 @@ export default function GroupList() {
                           <span key={m} class="tag">
                             {m}
                             <button
+                              type="button"
                               onClick={() => removeMember(g.cn, m)}
                               style="background:none;border:none;cursor:pointer;margin-left:2px;color:#888;font-size:0.7rem"
                               title={`Remove ${m}`}
@@ -216,9 +219,19 @@ export default function GroupList() {
                     </td>
                     <td>
                       <span style="display:flex;gap:4px">
-                        <button class="btn btn-secondary" onClick={() => openMember(g)}>+ Member</button>
-                        <button class="btn btn-secondary" onClick={() => openEdit(g)}>Edit</button>
-                        <button class="btn btn-danger" onClick={() => openDelete(g)}>Delete</button>
+                        <button
+                          type="button"
+                          class="btn btn-secondary"
+                          onClick={() => openMember(g)}
+                        >
+                          + Member
+                        </button>
+                        <button type="button" class="btn btn-secondary" onClick={() => openEdit(g)}>
+                          Edit
+                        </button>
+                        <button type="button" class="btn btn-danger" onClick={() => openDelete(g)}>
+                          Delete
+                        </button>
                       </span>
                     </td>
                   </tr>
@@ -234,7 +247,7 @@ export default function GroupList() {
           <div class="modal" onClick={(e) => e.stopPropagation()}>
             <div class="modal-header">
               <h3>Add Group</h3>
-              <button class="btn btn-secondary" onClick={closeModal}>✕</button>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>✕</button>
             </div>
             <div class="modal-body">
               {formError.value && <div class="alert alert-error">{formError.value}</div>}
@@ -252,8 +265,13 @@ export default function GroupList() {
               </div>
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" onClick={closeModal}>Cancel</button>
-              <button class="btn btn-primary" onClick={submitCreate} disabled={formLoading.value}>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>Cancel</button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                onClick={submitCreate}
+                disabled={formLoading.value}
+              >
                 {formLoading.value ? "Saving…" : "Create"}
               </button>
             </div>
@@ -267,7 +285,7 @@ export default function GroupList() {
           <div class="modal" onClick={(e) => e.stopPropagation()}>
             <div class="modal-header">
               <h3>Edit Group: {selectedGroup.value?.cn}</h3>
-              <button class="btn btn-secondary" onClick={closeModal}>✕</button>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>✕</button>
             </div>
             <div class="modal-body">
               {formError.value && <div class="alert alert-error">{formError.value}</div>}
@@ -281,8 +299,13 @@ export default function GroupList() {
               </div>
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" onClick={closeModal}>Cancel</button>
-              <button class="btn btn-primary" onClick={submitEdit} disabled={formLoading.value}>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>Cancel</button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                onClick={submitEdit}
+                disabled={formLoading.value}
+              >
                 {formLoading.value ? "Saving…" : "Save"}
               </button>
             </div>
@@ -296,7 +319,7 @@ export default function GroupList() {
           <div class="modal" onClick={(e) => e.stopPropagation()}>
             <div class="modal-header">
               <h3>Delete Group</h3>
-              <button class="btn btn-secondary" onClick={closeModal}>✕</button>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>✕</button>
             </div>
             <div class="modal-body">
               {formError.value && <div class="alert alert-error">{formError.value}</div>}
@@ -305,8 +328,13 @@ export default function GroupList() {
               </p>
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" onClick={closeModal}>Cancel</button>
-              <button class="btn btn-danger" onClick={submitDelete} disabled={formLoading.value}>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>Cancel</button>
+              <button
+                type="button"
+                class="btn btn-danger"
+                onClick={submitDelete}
+                disabled={formLoading.value}
+              >
                 {formLoading.value ? "Deleting…" : "Delete"}
               </button>
             </div>
@@ -320,7 +348,7 @@ export default function GroupList() {
           <div class="modal" onClick={(e) => e.stopPropagation()}>
             <div class="modal-header">
               <h3>Add Member to: {selectedGroup.value?.cn}</h3>
-              <button class="btn btn-secondary" onClick={closeModal}>✕</button>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>✕</button>
             </div>
             <div class="modal-body">
               {formError.value && <div class="alert alert-error">{formError.value}</div>}
@@ -335,8 +363,13 @@ export default function GroupList() {
               </div>
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" onClick={closeModal}>Cancel</button>
-              <button class="btn btn-primary" onClick={submitAddMember} disabled={formLoading.value}>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>Cancel</button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                onClick={submitAddMember}
+                disabled={formLoading.value}
+              >
                 {formLoading.value ? "Adding…" : "Add"}
               </button>
             </div>

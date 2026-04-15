@@ -24,11 +24,7 @@ import {
   handleRemoveMember,
   handleUpdateGroup,
 } from "./handlers/groups.ts";
-import {
-  handleCreateOU,
-  handleDeleteOU,
-  handleListOUs,
-} from "./handlers/ous.ts";
+import { handleCreateOU, handleDeleteOU, handleListOUs } from "./handlers/ous.ts";
 import { notFound } from "./helpers/response.ts";
 
 export interface RouterConfig {
@@ -80,7 +76,7 @@ export async function route(req: Request, cfg: RouterConfig): Promise<Response> 
 
   // PUT /api/status/sid
   if (method === "PUT" && url.pathname === "/api/status/sid") {
-    return handleUpdateSID(req, cfg.kv, cfg.config);
+    return handleUpdateSID(req, cfg.kv, cfg.config, cfg.store);
   }
 
   // --- ユーザー ---

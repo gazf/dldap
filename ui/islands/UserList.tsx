@@ -194,8 +194,8 @@ export default function UserList() {
       {error.value && <div class="alert alert-error">{error.value}</div>}
 
       <div class="toolbar">
-        <button class="btn btn-primary" onClick={openCreate}>+ Add User</button>
-        <button class="btn btn-secondary" onClick={load} disabled={loading.value}>
+        <button type="button" class="btn btn-primary" onClick={openCreate}>+ Add User</button>
+        <button type="button" class="btn btn-secondary" onClick={load} disabled={loading.value}>
           Refresh
         </button>
       </div>
@@ -220,16 +220,28 @@ export default function UserList() {
               <tbody>
                 {users.value.map((u) => (
                   <tr key={u.uid}>
-                    <td><code>{u.uid}</code></td>
+                    <td>
+                      <code>{u.uid}</code>
+                    </td>
                     <td>{u.cn}</td>
                     <td>{u.mail ?? "—"}</td>
                     <td>{u.uidNumber ?? "—"}</td>
                     <td>{u.gidNumber ?? "—"}</td>
                     <td>
                       <span style="display:flex;gap:4px">
-                        <button class="btn btn-secondary" onClick={() => openEdit(u)}>Edit</button>
-                        <button class="btn btn-secondary" onClick={() => openPassword(u)}>PW</button>
-                        <button class="btn btn-danger" onClick={() => openDelete(u)}>Delete</button>
+                        <button type="button" class="btn btn-secondary" onClick={() => openEdit(u)}>
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-secondary"
+                          onClick={() => openPassword(u)}
+                        >
+                          PW
+                        </button>
+                        <button type="button" class="btn btn-danger" onClick={() => openDelete(u)}>
+                          Delete
+                        </button>
                       </span>
                     </td>
                   </tr>
@@ -245,15 +257,20 @@ export default function UserList() {
           <div class="modal" onClick={(e) => e.stopPropagation()}>
             <div class="modal-header">
               <h3>Add User</h3>
-              <button class="btn btn-secondary" onClick={closeModal}>✕</button>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>✕</button>
             </div>
             <div class="modal-body">
               {formError.value && <div class="alert alert-error">{formError.value}</div>}
-              <UserFormFields form={form.value} setField={setField} showPassword={true} />
+              <UserFormFields form={form.value} setField={setField} showPassword />
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" onClick={closeModal}>Cancel</button>
-              <button class="btn btn-primary" onClick={submitCreate} disabled={formLoading.value}>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>Cancel</button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                onClick={submitCreate}
+                disabled={formLoading.value}
+              >
                 {formLoading.value ? "Saving…" : "Create"}
               </button>
             </div>
@@ -267,15 +284,20 @@ export default function UserList() {
           <div class="modal" onClick={(e) => e.stopPropagation()}>
             <div class="modal-header">
               <h3>Edit User: {selectedUser.value?.uid}</h3>
-              <button class="btn btn-secondary" onClick={closeModal}>✕</button>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>✕</button>
             </div>
             <div class="modal-body">
               {formError.value && <div class="alert alert-error">{formError.value}</div>}
               <UserFormFields form={form.value} setField={setField} showPassword={false} />
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" onClick={closeModal}>Cancel</button>
-              <button class="btn btn-primary" onClick={submitEdit} disabled={formLoading.value}>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>Cancel</button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                onClick={submitEdit}
+                disabled={formLoading.value}
+              >
                 {formLoading.value ? "Saving…" : "Save"}
               </button>
             </div>
@@ -289,7 +311,7 @@ export default function UserList() {
           <div class="modal" onClick={(e) => e.stopPropagation()}>
             <div class="modal-header">
               <h3>Delete User</h3>
-              <button class="btn btn-secondary" onClick={closeModal}>✕</button>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>✕</button>
             </div>
             <div class="modal-body">
               {formError.value && <div class="alert alert-error">{formError.value}</div>}
@@ -298,8 +320,13 @@ export default function UserList() {
               </p>
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" onClick={closeModal}>Cancel</button>
-              <button class="btn btn-danger" onClick={submitDelete} disabled={formLoading.value}>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>Cancel</button>
+              <button
+                type="button"
+                class="btn btn-danger"
+                onClick={submitDelete}
+                disabled={formLoading.value}
+              >
                 {formLoading.value ? "Deleting…" : "Delete"}
               </button>
             </div>
@@ -313,7 +340,7 @@ export default function UserList() {
           <div class="modal" onClick={(e) => e.stopPropagation()}>
             <div class="modal-header">
               <h3>Change Password: {selectedUser.value?.uid}</h3>
-              <button class="btn btn-secondary" onClick={closeModal}>✕</button>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>✕</button>
             </div>
             <div class="modal-body">
               {formError.value && <div class="alert alert-error">{formError.value}</div>}
@@ -328,8 +355,13 @@ export default function UserList() {
               </div>
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" onClick={closeModal}>Cancel</button>
-              <button class="btn btn-primary" onClick={submitPassword} disabled={formLoading.value}>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>Cancel</button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                onClick={submitPassword}
+                disabled={formLoading.value}
+              >
                 {formLoading.value ? "Changing…" : "Change"}
               </button>
             </div>
@@ -383,7 +415,11 @@ function UserFormFields({ form, setField, showPassword }: FormFieldsProps) {
         </div>
         <div class="form-group" style="grid-column:1/-1">
           <label>Home directory</label>
-          <input value={form.homeDirectory} onInput={setField("homeDirectory")} placeholder="/home/username" />
+          <input
+            value={form.homeDirectory}
+            onInput={setField("homeDirectory")}
+            placeholder="/home/username"
+          />
         </div>
         <div class="form-group">
           <label>Login shell</label>

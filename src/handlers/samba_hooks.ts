@@ -8,15 +8,8 @@
 
 import type { SambaConfig } from "../../config/default.ts";
 import { lmHash, ntHash } from "../samba/hash.ts";
-import {
-  DEFAULT_ACCT_FLAGS,
-  isSambaSamAccount,
-} from "../schema/samba.ts";
-import {
-  resolveGroupSID,
-  resolvePrimaryGroupSID,
-  resolveUserSID,
-} from "../samba/sid.ts";
+import { DEFAULT_ACCT_FLAGS, isSambaSamAccount } from "../schema/samba.ts";
+import { resolveGroupSID, resolvePrimaryGroupSID, resolveUserSID } from "../samba/sid.ts";
 
 /**
  * Enrich attrs with Samba attributes when adding a new entry.

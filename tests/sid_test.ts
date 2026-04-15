@@ -5,16 +5,16 @@
  * SID が誤ると Windows クライアントとの相互運用性が壊れる。
  */
 
-import { assertEquals, assertMatch } from "jsr:@std/assert";
+import { assertEquals, assertMatch } from "@std/assert";
 import {
   buildSID,
   ensureDomainSID,
   generateDomainSID,
-  userRID,
   groupRID,
-  resolveUserSID,
   resolveGroupSID,
   resolvePrimaryGroupSID,
+  resolveUserSID,
+  userRID,
   WELL_KNOWN_RIDS,
 } from "../src/samba/sid.ts";
 

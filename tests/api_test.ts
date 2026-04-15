@@ -5,7 +5,7 @@
  * ポートは OS に自動割り当て（port: 0）させることで並列実行時の衝突を回避。
  */
 
-import { assertEquals, assertExists } from "jsr:@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import { KvStore } from "../src/store/kv.ts";
 import { route, type RouterConfig } from "../src/api/router.ts";
 import { withCors } from "../src/api/middleware.ts";
@@ -491,7 +491,7 @@ Deno.test("POST /api/groups: グループが作成できる", async () => {
     assertEquals(res.status, 201);
     const body = await res.json();
     assertEquals(body.cn, "staff");
-    assertEquals(body.gidNumber, 2000);  // DTO は number 型
+    assertEquals(body.gidNumber, 2000); // DTO は number 型
   } finally {
     await cleanup();
   }

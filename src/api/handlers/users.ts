@@ -13,14 +13,7 @@ import type { Config } from "../../../config/default.ts";
 import type { DirectoryEntry, DirectoryStore } from "../../store/types.ts";
 import { onAdd, onPasswordChange } from "../../handlers/samba_hooks.ts";
 import { entryToUser, findUsers, isUser } from "../helpers/entry.ts";
-import {
-  badRequest,
-  conflict,
-  created,
-  noContent,
-  notFound,
-  ok,
-} from "../helpers/response.ts";
+import { badRequest, conflict, created, noContent, notFound, ok } from "../helpers/response.ts";
 
 export async function handleListUsers(
   store: DirectoryStore,

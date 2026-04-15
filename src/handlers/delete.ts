@@ -12,7 +12,10 @@ export async function handleDelete(
   if (!ctx.isAdmin) {
     return {
       type: ProtocolOp.DelResponse,
-      result: errorResult(ResultCode.InsufficientAccessRights, "Write access requires authentication"),
+      result: errorResult(
+        ResultCode.InsufficientAccessRights,
+        "Write access requires authentication",
+      ),
     };
   }
 

@@ -9,8 +9,21 @@ import type {
 import { errorResult, successResult } from "../ldap/messages.ts";
 import type { DirectoryEntry } from "../store/types.ts";
 import { normalizeDN } from "../store/types.ts";
+import type { Config } from "../../config/default.ts";
 import type { HandlerContext } from "./context.ts";
 import { matchesFilter } from "./filter.ts";
+
+function buildSambaDomainEntry(config: Config): DirectoryEntry {
+  const dn = `sambaDomainName=${config.samba.domain},${config.baseDN}`.toLowerCase();
+  return {
+    dn,
+    attrs: {
+      objectclass: ["top", "sambaDomain"],
+      sambadomainname: [config.samba.domain],
+      sambasid: [config.samba.domainSID],
+    },
+  };
+}
 
 export interface SearchResult {
   entries: SearchResultEntry[];
@@ -46,6 +59,15 @@ export async function handleSearch(
         result: errorResult(ResultCode.NoSuchObject, `Base object not found: ${baseDN}`),
       },
     };
+  }
+
+  if (ctx.config.samba.enabled) {
+    const virtual = buildSambaDomainEntry(ctx.config);
+    if (req.scope === SearchScope.BaseObject) {
+      if (virtual.dn === baseDN) candidates = [virtual];
+    } else {
+      candidates = [...candidates, virtual];
+    }
   }
 
   const entries: SearchResultEntry[] = [];

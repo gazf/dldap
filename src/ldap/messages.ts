@@ -2,7 +2,7 @@
  * TypeScript representations of LDAP protocol messages (RFC 4511).
  */
 
-import { FilterTag, ModifyOp, ProtocolOp, SearchScope } from "./constants.ts";
+import type { FilterTag, ModifyOp, ProtocolOp, SearchScope } from "./constants.ts";
 
 export interface LdapMessage {
   messageId: number;

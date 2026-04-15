@@ -5,7 +5,7 @@
  * LDAP クライアントが発行するクエリが意図通りの結果を返すかどうかに直結する。
  */
 
-import { assertEquals } from "jsr:@std/assert";
+import { assertEquals } from "@std/assert";
 import { matchesFilter } from "../src/handlers/filter.ts";
 import { FilterTag } from "../src/ldap/constants.ts";
 import type { DirectoryEntry } from "../src/store/types.ts";
@@ -33,7 +33,10 @@ Deno.test("フィルター Present: 存在する属性にマッチ", () => {
 });
 
 Deno.test("フィルター Present: 存在しない属性にはマッチしない", () => {
-  assertEquals(matchesFilter(john, { type: FilterTag.Present, attribute: "telephonenumber" }), false);
+  assertEquals(
+    matchesFilter(john, { type: FilterTag.Present, attribute: "telephonenumber" }),
+    false,
+  );
 });
 
 Deno.test("フィルター Present: objectClass は常に存在する", () => {
@@ -67,11 +70,19 @@ Deno.test("フィルター Equality: 不一致", () => {
 
 Deno.test("フィルター Equality: objectClass で検索", () => {
   assertEquals(
-    matchesFilter(john, { type: FilterTag.EqualityMatch, attribute: "objectClass", value: "posixAccount" }),
+    matchesFilter(john, {
+      type: FilterTag.EqualityMatch,
+      attribute: "objectClass",
+      value: "posixAccount",
+    }),
     true,
   );
   assertEquals(
-    matchesFilter(john, { type: FilterTag.EqualityMatch, attribute: "objectClass", value: "groupOfNames" }),
+    matchesFilter(john, {
+      type: FilterTag.EqualityMatch,
+      attribute: "objectClass",
+      value: "groupOfNames",
+    }),
     false,
   );
 });
@@ -110,7 +121,12 @@ Deno.test("フィルター Substrings: any（中間一致）", () => {
 Deno.test("フィルター Substrings: initial + final の組み合わせ（*(アスタリスク)パターン）", () => {
   // cn=John*Doe に相当
   assertEquals(
-    matchesFilter(john, { type: FilterTag.Substrings, attribute: "cn", initial: "John", final: "Doe" }),
+    matchesFilter(john, {
+      type: FilterTag.Substrings,
+      attribute: "cn",
+      initial: "John",
+      final: "Doe",
+    }),
     true,
   );
 });

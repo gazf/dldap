@@ -101,8 +101,8 @@ export default function OuList() {
       {error.value && <div class="alert alert-error">{error.value}</div>}
 
       <div class="toolbar">
-        <button class="btn btn-primary" onClick={openCreate}>+ Add OU</button>
-        <button class="btn btn-secondary" onClick={load} disabled={loading.value}>
+        <button type="button" class="btn btn-primary" onClick={openCreate}>+ Add OU</button>
+        <button type="button" class="btn btn-secondary" onClick={load} disabled={loading.value}>
           Refresh
         </button>
       </div>
@@ -125,11 +125,15 @@ export default function OuList() {
               <tbody>
                 {ous.value.map((ou) => (
                   <tr key={ou.ou}>
-                    <td><code>{ou.ou}</code></td>
+                    <td>
+                      <code>{ou.ou}</code>
+                    </td>
                     <td style="font-family:monospace;font-size:0.8rem;color:#555">{ou.dn}</td>
                     <td>{ou.description ?? "—"}</td>
                     <td>
-                      <button class="btn btn-danger" onClick={() => openDelete(ou)}>Delete</button>
+                      <button type="button" class="btn btn-danger" onClick={() => openDelete(ou)}>
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -144,13 +148,18 @@ export default function OuList() {
           <div class="modal" onClick={(e) => e.stopPropagation()}>
             <div class="modal-header">
               <h3>Add OU</h3>
-              <button class="btn btn-secondary" onClick={closeModal}>✕</button>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>✕</button>
             </div>
             <div class="modal-body">
               {formError.value && <div class="alert alert-error">{formError.value}</div>}
               <div class="form-group">
                 <label>OU name *</label>
-                <input value={form.value.ou} onInput={setField("ou")} required placeholder="e.g. engineering" />
+                <input
+                  value={form.value.ou}
+                  onInput={setField("ou")}
+                  required
+                  placeholder="e.g. engineering"
+                />
               </div>
               <div class="form-group">
                 <label>Description</label>
@@ -158,8 +167,13 @@ export default function OuList() {
               </div>
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" onClick={closeModal}>Cancel</button>
-              <button class="btn btn-primary" onClick={submitCreate} disabled={formLoading.value}>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>Cancel</button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                onClick={submitCreate}
+                disabled={formLoading.value}
+              >
                 {formLoading.value ? "Saving…" : "Create"}
               </button>
             </div>
@@ -173,18 +187,24 @@ export default function OuList() {
           <div class="modal" onClick={(e) => e.stopPropagation()}>
             <div class="modal-header">
               <h3>Delete OU</h3>
-              <button class="btn btn-secondary" onClick={closeModal}>✕</button>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>✕</button>
             </div>
             <div class="modal-body">
               {formError.value && <div class="alert alert-error">{formError.value}</div>}
               <p>
-                Delete OU <strong>{selectedOu.value?.ou}</strong>?
-                The OU must be empty before it can be deleted.
+                Delete OU{" "}
+                <strong>{selectedOu.value?.ou}</strong>? The OU must be empty before it can be
+                deleted.
               </p>
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" onClick={closeModal}>Cancel</button>
-              <button class="btn btn-danger" onClick={submitDelete} disabled={formLoading.value}>
+              <button type="button" class="btn btn-secondary" onClick={closeModal}>Cancel</button>
+              <button
+                type="button"
+                class="btn btn-danger"
+                onClick={submitDelete}
+                disabled={formLoading.value}
+              >
                 {formLoading.value ? "Deleting…" : "Delete"}
               </button>
             </div>

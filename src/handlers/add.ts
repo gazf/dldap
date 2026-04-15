@@ -13,11 +13,27 @@ export async function handleAdd(
   if (!ctx.isAdmin) {
     return {
       type: ProtocolOp.AddResponse,
-      result: errorResult(ResultCode.InsufficientAccessRights, "Write access requires authentication"),
+      result: errorResult(
+        ResultCode.InsufficientAccessRights,
+        "Write access requires authentication",
+      ),
     };
   }
 
   const dn = normalizeDN(req.entry);
+
+  // sambaDomain は dldap が仮想エントリとして管理するため書き込みをブロック
+  if (ctx.config.samba.enabled) {
+    const objectClasses = req.attributes
+      .find((a) => a.type.toLowerCase() === "objectclass")
+      ?.values.map((v) => v.toLowerCase()) ?? [];
+    if (objectClasses.includes("sambadomain")) {
+      return {
+        type: ProtocolOp.AddResponse,
+        result: errorResult(ResultCode.EntryAlreadyExists, "sambaDomain is managed by dldap"),
+      };
+    }
+  }
 
   // Check if already exists
   const existing = await ctx.store.get(dn);

@@ -12,16 +12,17 @@ export async function handleModifyDN(
   if (!ctx.isAdmin) {
     return {
       type: ProtocolOp.ModifyDNResponse,
-      result: errorResult(ResultCode.InsufficientAccessRights, "Write access requires authentication"),
+      result: errorResult(
+        ResultCode.InsufficientAccessRights,
+        "Write access requires authentication",
+      ),
     };
   }
 
   const oldDN = normalizeDN(req.entry);
 
   // Determine new parent
-  const newParent = req.newSuperior
-    ? normalizeDN(req.newSuperior)
-    : parentDN(oldDN);
+  const newParent = req.newSuperior ? normalizeDN(req.newSuperior) : parentDN(oldDN);
 
   const newDN = newParent ? `${req.newRDN},${newParent}` : req.newRDN;
   const newDNNorm = normalizeDN(newDN);

@@ -13,7 +13,10 @@ export async function handleModify(
   if (!ctx.isAdmin) {
     return {
       type: ProtocolOp.ModifyResponse,
-      result: errorResult(ResultCode.InsufficientAccessRights, "Write access requires authentication"),
+      result: errorResult(
+        ResultCode.InsufficientAccessRights,
+        "Write access requires authentication",
+      ),
     };
   }
 

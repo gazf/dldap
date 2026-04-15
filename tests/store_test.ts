@@ -6,7 +6,7 @@
  * LDAP ディレクトリとして期待される動作を検証する。
  */
 
-import { assertEquals, assertExists } from "jsr:@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import { KvStore } from "../src/store/kv.ts";
 
 async function withStore(fn: (store: KvStore) => Promise<void>): Promise<void> {

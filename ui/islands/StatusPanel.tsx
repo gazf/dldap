@@ -95,9 +95,7 @@ export default function StatusPanel() {
         <div class="info-row">
           <span class="info-key">Samba</span>
           <span class="info-val">
-            {s.sambaEnabled
-              ? `enabled (domain: ${s.sambaDomain ?? "—"})`
-              : "disabled"}
+            {s.sambaEnabled ? `enabled (domain: ${s.sambaDomain ?? "—"})` : "disabled"}
           </span>
         </div>
         {s.sambaEnabled && (
@@ -114,20 +112,31 @@ export default function StatusPanel() {
                         placeholder="S-1-5-21-X-X-X"
                         style="font-family:monospace;flex:1"
                       />
-                      <button class="btn btn-primary" onClick={saveSid} disabled={sidSaving.value}>
+                      <button
+                        type="button"
+                        class="btn btn-primary"
+                        onClick={saveSid}
+                        disabled={sidSaving.value}
+                      >
                         {sidSaving.value ? "Saving…" : "Save"}
                       </button>
-                      <button class="btn btn-secondary" onClick={cancelSidEdit}>Cancel</button>
+                      <button type="button" class="btn btn-secondary" onClick={cancelSidEdit}>
+                        Cancel
+                      </button>
                     </span>
                     {sidError.value && (
-                      <span style="color:var(--color-danger);font-size:0.85rem">{sidError.value}</span>
+                      <span style="color:var(--color-danger);font-size:0.85rem">
+                        {sidError.value}
+                      </span>
                     )}
                   </span>
                 )
                 : (
                   <>
                     <code>{s.sambaSID ?? "—"}</code>
-                    <button class="btn btn-secondary" onClick={openSidEdit}>Edit</button>
+                    <button type="button" class="btn btn-secondary" onClick={openSidEdit}>
+                      Edit
+                    </button>
                   </>
                 )}
             </span>

@@ -2,7 +2,7 @@
  * Parse BER-encoded bytes into LDAP message structures.
  */
 
-import { BerElement, decodeAll, decodeBer, decodeChildren } from "../ber/decoder.ts";
+import { type BerElement, decodeAll, decodeBer, decodeChildren } from "../ber/decoder.ts";
 import {
   decodeBoolean,
   decodeEnumerated,
@@ -12,8 +12,8 @@ import {
 } from "../ber/decoder.ts";
 import { FilterTag, ProtocolOp } from "./constants.ts";
 import type {
-  AddRequest,
   AbandonRequest,
+  AddRequest,
   BindRequest,
   Change,
   DelRequest,

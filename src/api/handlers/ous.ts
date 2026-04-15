@@ -9,14 +9,7 @@
 import type { Config } from "../../../config/default.ts";
 import type { DirectoryStore } from "../../store/types.ts";
 import { entryToOU, findOUs, isOU } from "../helpers/entry.ts";
-import {
-  badRequest,
-  conflict,
-  created,
-  noContent,
-  notFound,
-  ok,
-} from "../helpers/response.ts";
+import { badRequest, conflict, created, noContent, notFound, ok } from "../helpers/response.ts";
 
 export async function handleListOUs(
   store: DirectoryStore,
