@@ -20,6 +20,18 @@ export interface SambaConfig {
   lmHashEnabled: boolean;
 }
 
+export interface RadiusConfig {
+  enabled: boolean;
+  port: number;
+  host: string;
+  /** Shared secret for RADIUS clients (e.g. strongSwan) */
+  secret: string;
+  /** Base DN to search users under. Falls back to Config.baseDN if empty. */
+  baseDN: string;
+  /** Server name sent in EAP-MSCHAPv2 Challenge display name */
+  serverName: string;
+}
+
 export interface Config {
   port: number;
   host: string;
@@ -32,6 +44,7 @@ export interface Config {
   kvPath?: string;
   samba: SambaConfig;
   posix: PosixConfig;
+  radius: RadiusConfig;
 }
 
 export const defaultConfig: Config = {
@@ -53,5 +66,13 @@ export const defaultConfig: Config = {
     gidStart: 1000,
     homeBase: "/home",
     defaultShell: "/bin/bash",
+  },
+  radius: {
+    enabled: false,
+    port: 1812,
+    host: "0.0.0.0",
+    secret: "",
+    baseDN: "",
+    serverName: "dldap",
   },
 };
