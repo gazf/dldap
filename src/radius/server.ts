@@ -6,7 +6,7 @@
 import type { Config } from "../../config/default.ts";
 import type { DirectoryStore } from "../store/types.ts";
 import type { Server } from "../server.ts";
-import { KvStore } from "../store/kv.ts";
+import type { KvStore } from "../store/kv.ts";
 import { Attr, EapCode, EapType, MsAttr, RadiusCode } from "./constants.ts";
 import {
   computeMessageAuthenticator,
@@ -16,21 +16,16 @@ import {
   verifyMessageAuthenticator,
 } from "./crypto.ts";
 import {
+  encodeEapFailure,
+  encodeEapSuccess,
   encodeMsChapv2Challenge,
   encodeMsChapv2Failure,
   encodeMsChapv2Success,
-  encodeEapFailure,
-  encodeEapSuccess,
   parseEapIdentity,
   parseEapPacket,
   parseMsChapv2Response,
 } from "./eap.ts";
-import {
-  challengeHash as _unused_ch,
-  deriveMSK,
-  generateAuthenticatorResponse,
-  verifyNTResponse,
-} from "./mschapv2.ts";
+import { deriveMSK, generateAuthenticatorResponse, verifyNTResponse } from "./mschapv2.ts";
 import {
   encodePacket,
   getAttrBytes,
@@ -44,13 +39,8 @@ import {
   type RadiusAttribute,
   type RadiusPacket,
 } from "./packet.ts";
-import {
-  deleteEapState,
-  getEapState,
-  hexToBytes,
-  saveEapState,
-} from "./state.ts";
-import { findUserByUid, getNtHash, verifyPap } from "./auth.ts";
+import { deleteEapState, getEapState, hexToBytes, saveEapState } from "./state.ts";
+import { getNtHash, verifyPap } from "./auth.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -73,12 +63,10 @@ function buildResponse(
   attrs: RadiusAttribute[],
   secret: Uint8Array,
 ): Uint8Array {
-  const hasEap = attrs.some((a) => a.type === Attr.EapMessage);
-
-  // Add Message-Authenticator placeholder (16 zero bytes) when EAP is present
-  // or for all Access-Accept/Reject/Challenge messages (strongSwan expects it)
+  // Add Message-Authenticator placeholder (16 zero bytes) for all responses
+  // (strongSwan expects it even on non-EAP messages)
   const msgAuthPlaceholder = makeAttr(Attr.MessageAuthenticator, new Uint8Array(16));
-  const allAttrs = hasEap || true ? [...attrs, msgAuthPlaceholder] : attrs;
+  const allAttrs = [...attrs, msgAuthPlaceholder];
 
   // Encode with a temporary zero authenticator to compute lengths/offsets
   const tempPkt: RadiusPacket = {

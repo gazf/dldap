@@ -18,8 +18,8 @@ export interface EapPacket {
 
 export interface MsChapv2Response {
   peerChallenge: Uint8Array; // 16 bytes
-  ntResponse: Uint8Array;    // 24 bytes
-  flags: number;             // 1 byte (should be 0)
+  ntResponse: Uint8Array; // 24 bytes
+  flags: number; // 1 byte (should be 0)
   userName: string;
 }
 
@@ -79,14 +79,15 @@ export function encodeMsChapv2Challenge(
   const msLength = 4 + 1 + 16 + nameBytes.length; // opcode..name
   const data = new Uint8Array(1 + 1 + 1 + 2 + 1 + 16 + nameBytes.length);
   let off = 0;
-  data[off++] = EapType.MSCHAPv2;          // EAP type
-  data[off++] = MSCHAPv2Opcode.Challenge;  // opcode
-  data[off++] = msChapId;                  // MSCHAPv2-ID
-  data[off++] = (msLength >>> 8) & 0xff;   // MS-Length high
-  data[off++] = msLength & 0xff;           // MS-Length low
-  data[off++] = 16;                        // Value-Size
-  data.set(authChallenge, off); off += 16; // AuthChallenge
-  data.set(nameBytes, off);                // Name
+  data[off++] = EapType.MSCHAPv2; // EAP type
+  data[off++] = MSCHAPv2Opcode.Challenge; // opcode
+  data[off++] = msChapId; // MSCHAPv2-ID
+  data[off++] = (msLength >>> 8) & 0xff; // MS-Length high
+  data[off++] = msLength & 0xff; // MS-Length low
+  data[off++] = 16; // Value-Size
+  data.set(authChallenge, off);
+  off += 16; // AuthChallenge
+  data.set(nameBytes, off); // Name
   return encodeEapPacket(EapCode.Request, eapId, data);
 }
 
